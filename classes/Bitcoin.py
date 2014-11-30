@@ -64,16 +64,16 @@ class BitcoinTransaction:
 
         self.details = raw[2]
         if raw[3]:
-            self.price = float(raw[3])
+            self.price = float(raw[3].replace(",", ""))
 
-        self.qty = float(raw[8])
+        self.qty = float(raw[8].replace(",", ""))
         if self.type == "withdraw" or self.type == "sell":
             self.qty *= -1
 
 
         if raw[7]:
-            self.amount = float(raw[7])
-        self.balance = float(raw[9])
+            self.amount = float(raw[7].replace(",", ""))
+        self.balance = float(raw[9].replace(",", ""))
 
         if self.type == "deposit" or self.type == "withdraw":
             self.amount = self.qty
