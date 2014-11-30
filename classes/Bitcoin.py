@@ -166,7 +166,7 @@ class Bitcoin:
         print "in sum your profit is:\t%f EUR" % value
 
 if __name__ == "__main__":
-    b = Bitcoin("***REMOVED***")
+    b = Bitcoin("xxx")
     b.fetchData()
     b.loadTransactionFile(sys.argv[1])
     
