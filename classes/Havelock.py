@@ -72,7 +72,7 @@ class Havelock:
         balance = j["balance"]
         self.havelockBalance = float(balance["balance"])
         self.havelockBalanceAvailable = float(balance["balanceavailable"])
-        print "havelock balance: %f BTC" % self.havelockBalance
+        print "havelock balance: {:f} BTC".format(self.havelockBalance)
 
     def fetchTransactions(self):
         """ get history """
@@ -114,17 +114,24 @@ class Havelock:
 
         
     def printDetails(self, full=True, btc2eur=None):
+
+        btc2eur = btc2eur or 1.0
+
         print "Havelock Account Details:" 
         print "-" * get_console_size()["width"]
         wit = self.transactions.getWithdrawAmount()
         dep = self.transactions.getDepositAmount()
         if full:
-            print "total buys:              {:>20d} shares".format(self.transactions.getBuyQuantity())
-            print "total sells:             {:>20d} shares".format(self.transactions.getSellQuantity())
-            print "total dividend received: {:>20f} BTC".format(self.transactions.getDividendAmount())
+            print "total buys:              {:>20d} shares".format(
+                    self.transactions.getBuyQuantity())
+            print "total sells:             {:>20d} shares".format(
+                    self.transactions.getSellQuantity())
+            print "total dividend received: {:>20f} BTC".format(
+                    self.transactions.getDividendAmount())
             print "total withdraw:          {:>20f} BTC".format(wit)
             print "total deposit:           {:>20f} BTC".format(dep)
-            print "total fees:              {:>20f} BTC".format(self.transactions.getFeeAmount())
+            print "total fees:              {:>20f} BTC".format(
+                    self.transactions.getFeeAmount())
             print "-" * get_console_size()["width"]
 
         self.printPortfolio(btc2eur=btc2eur)
@@ -182,9 +189,9 @@ class Havelock:
                      for f, d in zip(fmts2, data2))
 
     def store(self):
-        content = "%s\n" % Transaction().getHeader()
+        content = "{:s}\n".format(Transaction().getHeader())
         for t in self.transactions.transactions:
-            content += "%s\n" % t
+            content += "{:s}\n".format(t)
 
         f = open("test.csv", "w")
         f.write(content)
