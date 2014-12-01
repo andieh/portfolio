@@ -89,8 +89,9 @@ class BitcoinTransaction:
                 self.balance)
 
 class Bitcoin:
-    def __init__(self, apiKey):
-        self.apiKey = apiKey
+    def __init__(self, conf):
+        self.conf = conf
+        self.apiKey = self.conf.btc_de_api_key
         self.btc2eur = 0.0
         self.eur2btc = 0.0
         self.transactions = Transactions()

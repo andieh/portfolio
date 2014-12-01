@@ -224,10 +224,6 @@ class Transactions:
 
         return tes
 
-
-
-
-
     def getType(self, tp, symbol=None):
         if symbol is None:
             symbols = self.allTransactions.keys()
@@ -274,10 +270,11 @@ class Transactions:
 
    
     def sumAmount(self, array):
-        sum = 0.0
-        for t in array:
-            sum += t.getAmount()
-        return sum
+        return sum(x.getAmount() for x in array)
+        #sum = 0.0
+        #for t in array:
+        #    sum += t.getAmount()
+        #return sum
 
     def getSellAmount(self, symbol=None):
         return self.sumAmount(self.getSell(symbol))

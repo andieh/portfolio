@@ -5,11 +5,12 @@ from classes import Havelock
 from classes import Bitcoin
 
 from config import Config
-
+from utils import get_console_size
 
 cmdline_parse = cp = \
     argparse.ArgumentParser(
-            description="BTC.de and Havelock portfolio manager")
+            description="BTC.de and Havelock portfolio manager",
+            epilog="Blaaaaa.......")
 
 cp.add_argument("-B", "--btcde-csv-file", type=str, 
         default=Config.btc_de_history,
@@ -25,10 +26,13 @@ cp.add_argument("--havelock-api-key", type=str,
         default=Config.hl_api_key,
         help="The API key to be used for Havelock")
 
+cp.add_argument("--btc2eur", type=float, default=None,
+        help="Force an exchange rate btc-to-eur for calculations")
+
 args = cp.parse_args()
 
-bitcoin = Bitcoin(args.btcde_api_key)
-havelock = Havelock(args.havelock_api_key)
+bitcoin = Bitcoin(Config)
+havelock = Havelock(Config)
 
 fn = args.btcde_csv_file
 if os.path.exists(fn) and os.path.isfile(fn):
@@ -41,21 +45,28 @@ if os.path.exists(fn) and os.path.isfile(fn):
     havelock.loadTransactionFile(fn)
 else:
     print "[-] no havelock transaction history found..."
-    
+ 
+
+
 while 1:
     # update transactions
     havelock.fetchTransactions()
     # get current prices
     havelock.fetchPortfolio()
-    havelock.printDetails(full=False)
+    
+    # fetch btc.de data, if available
+    if bitcoin.fetchData() == 0.0 and args.btc2eur is not None:
+        bitcoin.btc2eur = args.btc2eur
 
+
+    # some fancy output
+    d = get_console_size()
+    havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur, width=d["width"])
     havelockBalance = havelock.getBalance()
-
     havelock.store()
     
     print 
 
-    bitcoin.fetchData()
     bitcoin.printDetails(full=False)
     
     print 

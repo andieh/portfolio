@@ -27,13 +27,18 @@ class Symbol(Transactions):
         return buys[-1].getPrice()
 
 class Portfolio:
-    def __init__(self):
+    def __init__(self, epsilon=1e-12):
         self.symbols = {}
         self.currentPrices = {}
+        self.epsilon = epsilon
+
+    def isEqual(self, val, target):
+        x = val - target
+        return -self.epsilon <= x <= self.epsilon
 
     def addSymbol(self, symbol):
         if symbol in self.symbols:
-            print "symbol already registered, ignoring new data"
+            print "[+] symbol already registered, ignoring new data"
             return
         self.symbols[symbol] = Symbol(symbol)
         #self.currentPrices[symbol] = 0.0
@@ -48,7 +53,7 @@ class Portfolio:
         return self.currentPrices[symbol]
 
     def getCurrentValue(self, symbols=None):
-        if type(symbols) == type(""):
+        if type(symbols) == str:
             symbols = [symbols]
 
         if symbols is None:
@@ -59,6 +64,17 @@ class Portfolio:
             value += self.symbols[symbol].getShareQuantity() * self.currentPrices[symbol]
         return value
     
+    def getBookValues(self, symbols=None):
+        ### TODO 
+        if type(symbols) == str:
+            symbols = [symbols]
+
+        if symbols is None:
+            symbols = self.symbols.keys()
+
+        #self.port.getBuys()
+        return 0.0
+
     def getTrend(self, symbol):
         if self.symbols[symbol].getMeanPrice() == 0:
             return 0
@@ -66,12 +82,19 @@ class Portfolio:
         return ((self.getCurrentPrice(symbol) / self.symbols[symbol].getMeanPrice()) - 1.0) * 100
     
     def getOverallTrend(self, symbol):
-        p = self.symbols[symbol].getBuyAmount() - self.symbols[symbol].getSellAmount()
-        if p == 0:
-            return 0
+        sym = self.symbols[symbol]
+        p = sym.getSellAmount() - sym.getBuyAmount()
+        if self.isEqual(p, 0.0):
+            return float("NaN")
 
-        c = self.symbols[symbol].getShareQuantity() * self.getCurrentPrice(symbol) + self.symbols[symbol].getDividendAmount()
-        return ((c/p)-1.0)*100
+        c = self.getCurrentValue(symbol) + sym.getDividendAmount()
+        return ((c / p) - 1.0) * 100.0
+
+    def getCurrentWin(self, symbol):
+        sym = self.symbols[symbol]
+        return sym.getSellAmount() - sym.getBuyAmount() + \
+               sym.getDividendAmount() - sym.getFeeAmount() + \
+               self.getCurrentValue(symbol)
 
     def addTransactions(self, transactions, sy=None):
         new = None
