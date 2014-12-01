@@ -60,8 +60,7 @@ while 1:
 
 
     # some fancy output
-    d = get_console_size()
-    havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur, width=d["width"])
+    havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
     havelockBalance = havelock.getBalance()
     havelock.store()
     

@@ -1,3 +1,4 @@
+#-*- coding: utf-8 -*-
 import requests
 import json
 
@@ -17,9 +18,9 @@ class Havelock:
     def fetchData(self, dataType):
         payload = {'key': self.apiKey}
         if dataType == "portfolio" or "balance":
-            url = "https://www.havelockinvestments.com/r/%s" % dataType
+            url = "https://www.havelockinvestments.com/r/{:s}".format(dataType)
         elif dataType == "transactions":
-            url = "https://www.havelockinvestments.com/r/%s" % dataType
+            url = "https://www.havelockinvestments.com/r/{:s}".format(dataType)
             payload["limit"] = 300
             # add sinceid to payload
         else:
@@ -49,7 +50,8 @@ class Havelock:
         tes = []
         for d in portfolio:
             self.currentPrices[d["symbol"]] = float(d["lastprice"])
-            if not __debug__: print "fetched lastprice %f for symbol %s" % (self.currentPrices[d["symbol"]], d["symbol"])
+            if not __debug__: print "fetched lastprice {} for symbol {}".format(
+                    (self.currentPrices[d["symbol"]], d["symbol"]))
             t = Transaction()
             t.type = "rate"
             t.symbol = d["symbol"]
@@ -111,75 +113,73 @@ class Havelock:
         return (bal+por)
 
         
-    def printDetails(self, full=True, btc2eur=None, width=None):
+    def printDetails(self, full=True, btc2eur=None):
         print "Havelock Account Details:" 
         print "-" * get_console_size()["width"]
         wit = self.transactions.getWithdrawAmount()
         dep = self.transactions.getDepositAmount()
         if full:
-            print "total buys:\t\t\t%d shares" % self.transactions.getBuyQuantity()
-            print "total sells:\t\t\t%d shares" % self.transactions.getSellQuantity()
-            print "total dividend received:\t%f BTC" % self.transactions.getDividendAmount()
-            print "total withdraw:\t\t\t%f BTC" % wit
-            print "total deposit:\t\t\t%f BTC" % dep
-            print "total fees:\t\t\t%f BTC" % self.transactions.getFeeAmount()
+            print "total buys:              {:>20d} shares".format(self.transactions.getBuyQuantity())
+            print "total sells:             {:>20d} shares".format(self.transactions.getSellQuantity())
+            print "total dividend received: {:>20f} BTC".format(self.transactions.getDividendAmount())
+            print "total withdraw:          {:>20f} BTC".format(wit)
+            print "total deposit:           {:>20f} BTC".format(dep)
+            print "total fees:              {:>20f} BTC".format(self.transactions.getFeeAmount())
             print "-" * get_console_size()["width"]
 
-        self.printPortfolio(btc2eur=btc2eur, width=width)
+        self.printPortfolio(btc2eur=btc2eur)
         print "-" * get_console_size()["width"]
         bal = self.transactions.getBalance()
         
-        print "current balance:\t%f BTC" % bal
+        print "current balance:\t{:>.8f} BTC".format(bal)
         por = self.portfolio.getCurrentValue()
         
-        print "portfolio value:\t%f BTC" % por
-        print "in sum your profit is:\t%f BTC" % (wit + por + bal - dep)
+        print "portfolio value:\t{:>.8f} BTC".format(por)
+        print "in sum your profit is:\t{:>.8f} BTC".format(wit + por + bal - dep)
 
-    def printPortfolio(self, btc2eur=None, width=None):
+    def printPortfolio(self, btc2eur=None):
         p = self.portfolio
+        console_width = get_console_size()["width"]
+        
         print "this portfolio saw {} symbols:".format(len(p.symbols))
+        print "-" * console_width
+
+
+        fmts =    [".2f", "d", "s", ".2f", ".5f", ".5f", ".3f"]
+        header =  ["Trend (%)", "Buys", "", "Market (B)", 
+                   "Divs (B)", "Mean (B)", "Win (B)"]
+   
+        fmts2 =   [".2f", "d", "d", "s", ".5f", ".5f", ".2f"]
+        header2 = ["Overall (%)", "Sells", "Sum", "Book (B)", 
+                   "Fee (B)", "Cur (B)", "Win (E)"]
+    
+        colwidth = (console_width / len(header)) - 3
+        fill = " | "       
+
+        print fill.join("{:>{}s}".format(h, colwidth) \
+                for f, h in zip(fmts, header))
+        print fill.join("{:>{}s}".format(h, colwidth) \
+                for f, h in zip(fmts, header2))
+
         for s in self.portfolio.symbols:
             t = p.symbols[s]
+               
+            print "-" * console_width
+            _s = "{1:-^{0}}".format(console_width, "> " + s + " <")
+            print _s[console_width/5:] + _s[:console_width/5]
 
-            header =  ["  Trend (%)", " Buys", "   ", "Market Value (BTC)", "Dividends (BTC)", "Mean Price (BTC)", "Win (BTC)"]
-            header2 = ["Overall (%)", "Sells", "Sum", "  Book Value (BTC)", "     Fees (BTC)", " Cur Price (BTC)", "Win (EUR)"]
-        
-            space, sep = 1, 1
-            needed = max(sum(len(k) + space + sep for k in header), 
-                         sum(len(k) + space + sep for k in header2))
-            
-            while needed < width:
-                needed += len(header) * 2
-                space += 1
-
-            if needed > width:
-                needed -= len(header) * 2
-                space -= 1
-
-            print
-            print "{1:-^{0}}".format(needed, "> " + s + " <")
-            
-            fill = (" " * space) + "|" + (" " * space)
-            print fill.join(header)
-            print fill.join(header2)
-            
-            print "-" * needed 
-
-            data =  [p.getTrend(s), t.getBuyQuantity(), None, 
+            data =  [p.getTrend(s), t.getBuyQuantity(), "", 
                      p.getCurrentValue(s), t.getDividendAmount(), 
                      t.getMeanPrice(), p.getCurrentWin(s)]
             data2 = [p.getOverallTrend(s), t.getSellQuantity(), 
-                     t.getShareQuantity(), None, t.getFeeAmount(),
+                     t.getShareQuantity(), "n/a", t.getFeeAmount(),
                      p.getCurrentPrice(s), p.getCurrentWin(s) * btc2eur] 
 
-            line_tmpl = fill.join(header).split("|")
-            fill = " |"
-            print fill.join("{:>{}.{}f}".format(d, len(t)-1, self.conf.d_eps) \
-                    if d is not None else (" " * (len(t)-1)) \
-                        for t, d in zip(line_tmpl, data))
-            print fill.join("{:>{}.{}f}".format(d, len(t)-1, self.conf.d_eps) \
-                    if d is not None else (" " * (len(t)-1)) \
-                        for t, d in zip(line_tmpl, data2))
+            print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
+                     for f, d in zip(fmts, data))
+
+            print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
+                     for f, d in zip(fmts2, data2))
 
     def store(self):
         content = "%s\n" % Transaction().getHeader()
