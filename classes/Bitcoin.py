@@ -14,6 +14,9 @@ class BitcoinTransaction:
         self.type = None
         self.details = ""
         self.price = 0.0
+        self.eurBefore = 0.0
+        self.btcAfter = 0.0
+        self.eurAfter = 0.0
         self.qty = 0.0
         self.amount = 0.0
         self.balance = 0.0
@@ -59,33 +62,70 @@ class BitcoinTransaction:
             self.type = "withdraw"
         elif raw[1] == "Einzahlung":
             self.type = "deposit"
+        elif raw[1] == "\"Welcome Btc\"":
+            self.type = "deposit"
+            raw[2] = "0.1 BTC welcome bonus to bitcoin.de!"
+        elif raw[1] == "Registrierung":
+            return False
         else:
             self.type = raw[1]
 
         self.details = raw[2]
+
         if raw[3]:
             self.price = float(raw[3].replace(",", ""))
+
+        if raw[4]:
+            self.eurBefore = float(raw[4].replace(",",""))
+        
+        if raw[5]:
+            self.btcAfter = float(raw[5].replace(",",""))
+        
+        if raw[6]:
+            self.eurAfter = float(raw[6].replace(",",""))
+
+        if raw[7]:
+            self.amount = float(raw[7].replace(",", ""))
 
         self.qty = float(raw[8].replace(",", ""))
         if self.type == "withdraw" or self.type == "sell":
             self.qty *= -1
-
-
-        if raw[7]:
-            self.amount = float(raw[7].replace(",", ""))
-        self.balance = float(raw[9].replace(",", ""))
-
         if self.type == "deposit" or self.type == "withdraw":
             self.amount = self.qty
 
+        self.balance = float(raw[9].replace(",", ""))
+
+        return True
+
+    def getHeader(self):
+        return "Datum;Typ;Referenz;\"Kurs (EUR/BTC)\";\"BTC vor Gebuehr\";\"EUR vor Gebuehr\";\"BTC nach Gebuehr\";\"EUR nach Gebuehr\";\"Zu- / Abgang\";Kontostand"
+
     def __str__(self):
-        return "%s,%s,%s,%f,%f,%f,%f" % \
+        qty = self.qty
+        amount = self.amount
+        if self.type == "sell" or self.type == "withdraw":
+            qty *= -1
+
+        t = "Kurs"
+        if self.type == "sell":
+            t = "Verkauf"
+        elif self.type == "buy":
+            t = "Kauf"
+        elif self.type == "deposit":
+            t = "Einzahlung"
+        elif self.type == "withdraw":
+            t = "Auszahlung"
+
+        return "\"%s\";%s;%s;%f;%f;%f;%f;%f;%f;%f" % \
                 (datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S'), \
-                self.type,\
+                t,\
                 self.details,\
                 self.price,\
-                self.qty,\
-                self.amount,\
+                self.eurBefore,\
+                self.btcAfter,\
+                self.eurAfter,\
+                amount,\
+                qty,\
                 self.balance)
 
 class Bitcoin:
@@ -127,14 +167,20 @@ class Bitcoin:
             if raw[0] == "Datum":
                 continue
             b = BitcoinTransaction()
-            b.parse(raw)
-            transactions.append(b)
+            if b.parse(raw):
+                transactions.append(b)
 
         self.transactions.addTransactions(transactions)
         self.transactions.sortTransactions()
 
+    def store(self):
+        content = "{:s}\n".format(BitcoinTransaction().getHeader())
         for t in self.transactions.transactions:
-            print t
+            content += "{:s}\n".format(t)
+
+        f = open("test.csv", "w")
+        f.write(content)
+        f.close()
 
     def getBalance(self):
         buy = self.transactions.getBuyQuantity() 
@@ -198,4 +244,6 @@ if __name__ == "__main__":
     b.loadTransactionFile(sys.argv[1])
     
     b.printDetails()
+
+    b.store()
 
