@@ -225,11 +225,6 @@ class Bitcoin:
         colwidth = (console_width / len(header)) - 3
         fill = " | "       
 
-        #print fill.join("{:>{}s}".format(h, colwidth) \
-        #        for f, h in zip(fmts, header))
-        #print fill.join("{:>{}s}".format(h, colwidth) \
-        #        for f, h in zip(fmts, header2))
-
         print "-" * console_width
         _s = "{1:-^{0}}".format(console_width, "> Bitcoin <")
         print _s[console_width/5:] + _s[:console_width/5]

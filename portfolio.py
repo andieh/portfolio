@@ -60,28 +60,27 @@ while 1:
 
 
     # some fancy output
-    havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
-    havelockBalance = havelock.getBalance()
+    havelock.printPortfolio(btc2eur=bitcoin.btc2eur)
     havelock.store("test-havelock.csv")
     
-    print 
-
     bitcoin.printBitcoin()
-
-    print
-
-    #bitcoin.printDetails(full=False)
     bitcoin.store("test-bitcoin.csv")
     
+    havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
+    havelockBalance = havelock.getBalance()
     bitcoinBalance = bitcoin.getBalance()
+
     print "Summary:"
-    print "------------------------------"
+    print "-" * get_console_size()["width"]
     sumBtc = bitcoinBalance + havelockBalance
     sumEur = bitcoin.exchange(sumBtc)
-    print "Total sum: {:.8f} BTC ({:.2f} EUR)".format(sumBtc, sumEur)
+    print "Total balance: {:>38f} BTC".format(sumBtc)
+    print "{:>53f} EUR".format(sumEur)
     invest = bitcoin.getInvest()
-    print "Total sum of invest: {:.2f} EUR".format(invest)
-    print "in sum your profit is: {:.2f} EUR".format(sumEur + invest)
+    print "Total sum of invest: {:>32f} EUR".format(invest)
+    print "-" * get_console_size()["width"]
+    print "in sum your profit is: {:>30f} EUR".format(sumEur + invest)
+    print "-" * get_console_size()["width"]
     break
 
     time.sleep(10)

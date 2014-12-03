@@ -134,21 +134,22 @@ class Havelock:
                     self.transactions.getFeeAmount())
             print "-" * get_console_size()["width"]
 
-        self.printPortfolio(btc2eur=btc2eur)
-        print "-" * get_console_size()["width"]
+            self.printPortfolio(btc2eur=btc2eur)
+            print "-" * get_console_size()["width"]
         bal = self.transactions.getBalance()
         
-        print "current balance:\t{:>.8f} BTC".format(bal)
+        print "current balance:\t{:>29f} BTC".format(bal)
         por = self.portfolio.getCurrentValue()
         
-        print "portfolio value:\t{:>.8f} BTC".format(por)
-        print "in sum your profit is:\t{:>.8f} BTC".format(wit + por + bal - dep)
+        print "portfolio value:\t{:>29f} BTC".format(por)
+        print "in sum your profit is:{:>31f} BTC".format(wit + por + bal - dep)
+        print "-" * get_console_size()["width"]
 
     def printPortfolio(self, btc2eur=None):
         p = self.portfolio
         console_width = get_console_size()["width"]
         
-        print "this portfolio saw {} symbols:".format(len(p.symbols))
+        print "your portfolio:"
         print "-" * console_width
 
 
