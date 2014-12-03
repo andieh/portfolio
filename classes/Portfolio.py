@@ -37,6 +37,9 @@ class Portfolio:
         return -self.epsilon <= x <= self.epsilon
 
     def addSymbol(self, symbol):
+        if symbol == None:
+            return
+
         if symbol in self.symbols:
             print "[+] symbol already registered, ignoring new data"
             return
@@ -97,6 +100,13 @@ class Portfolio:
                self.getCurrentValue(symbol)
 
     def addTransactions(self, transactions, sy=None):
+        """ 
+        this function sucks!
+        needs cleanup
+        """
+        if sy == "None":
+            return
+
         new = None
         if sy is None:
             for t in transactions:
