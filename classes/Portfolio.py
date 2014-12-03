@@ -86,11 +86,11 @@ class Portfolio:
     
     def getOverallTrend(self, symbol):
         sym = self.symbols[symbol]
-        p = sym.getSellAmount() - sym.getBuyAmount()
+        p = sym.getBuyAmount()
         if self.isEqual(p, 0.0):
             return float("NaN")
 
-        c = self.getCurrentValue(symbol) + sym.getDividendAmount()
+        c = self.getCurrentWin(symbol) + self.getCurrentValue(symbol)
         return ((c / p) - 1.0) * 100.0
 
     def getCurrentWin(self, symbol):

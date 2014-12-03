@@ -152,11 +152,11 @@ class Havelock:
         print "-" * console_width
 
 
-        fmts =    [".2f", "d", "s", ".2f", ".5f", ".5f", ".3f"]
+        fmts =    [".2f", "d", "s", ".3f", ".5f", ".5f", ".3f"]
         header =  ["Trend (%)", "Buys", "", "Market (B)", 
                    "Divs (B)", "Mean (B)", "Win (B)"]
    
-        fmts2 =   [".2f", "d", "d", "s", ".5f", ".5f", ".2f"]
+        fmts2 =   [".2f", "d", "d", ".3f", ".5f", ".5f", ".2f"]
         header2 = ["Overall (%)", "Sells", "Sum", "Book (B)", 
                    "Fee (B)", "Cur (B)", "Win (E)"]
     
@@ -175,11 +175,9 @@ class Havelock:
             _s = "{1:-^{0}}".format(console_width, "> " + s + " <")
             print _s[console_width/5:] + _s[:console_width/5]
 
-            data =  [p.getTrend(s), t.getBuyQuantity(), "", 
-                     p.getCurrentValue(s), t.getDividendAmount(), 
-                     t.getMeanPrice(), p.getCurrentWin(s)]
+            data =  [p.getTrend(s), t.getBuyQuantity(), "", p.getCurrentValue(s), t.getDividendAmount(), t.getMeanPrice(), p.getCurrentWin(s)]
             data2 = [p.getOverallTrend(s), t.getSellQuantity(), 
-                     t.getShareQuantity(), "n/a", t.getFeeAmount(),
+                     t.getShareQuantity(), t.getBuyAmount(), t.getFeeAmount(),
                      p.getCurrentPrice(s), p.getCurrentWin(s) * btc2eur] 
 
             print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
