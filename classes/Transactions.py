@@ -176,6 +176,9 @@ class Transactions:
     def addTransactions(self, transactions):
         for t in transactions:
             self.addTransaction(t, parse=False)
+        self.sortTransactions()
+
+    def sortTransactions(self):
         self.transactions.sort(key=operator.attrgetter('ts'))
 
     def addTransaction(self, raw, parse=True):

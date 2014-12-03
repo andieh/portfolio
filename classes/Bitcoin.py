@@ -106,6 +106,13 @@ class Bitcoin:
             print "failed to fetch bitcoin price"
             print str(e)
 
+        # create transaction with current rate
+        t = BitcoinTransaction()
+        t.type = "Kurs"
+        t.price = self.btc2eur
+        t.details = "added by portfolio"
+        self.transactions.addTransactions([t])
+        
         return self.btc2eur
 
     def loadTransactionFile(self, filename):
@@ -124,6 +131,10 @@ class Bitcoin:
             transactions.append(b)
 
         self.transactions.addTransactions(transactions)
+        self.transactions.sortTransactions()
+
+        for t in self.transactions.transactions:
+            print t
 
     def getBalance(self):
         buy = self.transactions.getBuyQuantity() 
@@ -140,6 +151,17 @@ class Bitcoin:
     def exchange(self, btc):
         return btc * self.btc2eur
 
+    def getBuyRate(self):
+        amount = self.transactions.getBuyAmount() 
+        buy = self.transactions.getBuyQuantity()
+        if buy == 0:
+            return 0.0
+        return amount / buy
+    
+    def getTrend(self):
+        rate = self.getBuyRate()
+        return ((self.btc2eur / rate) - 1.0) * 100
+
     def printDetails(self, full=True):
         print "Bitcoin Account Details:" 
         print "------------------------------"
@@ -147,8 +169,7 @@ class Bitcoin:
         selAmount = self.transactions.getSellAmount()
         if full:
             buy = self.transactions.getBuyQuantity() 
-            mean = buyAmount / buy
-            print "total buys:\t\t%d BTC for %0.2f EUR (rate: %0.4f EUR)" % (buy, buyAmount, mean)
+            print "total buys:\t\t%d BTC for %0.2f EUR (rate: %0.4f EUR)" % (buy, buyAmount, self.getBuyRate())
 
             sel = self.transactions.getSellQuantity()
             mean = selAmount / sel
@@ -160,14 +181,19 @@ class Bitcoin:
             print "total deposit:\t\t%f BTC" % dep
             print "------------------------------"
 
-        print "current rate: %f EUR" % self.btc2eur 
+        print "current rate: %f EUR (Trend: %0.2f%%)" % (self.btc2eur, self.getTrend())
         val = self.getBalance()
         print "current balance: %f BTC (%0.2f EUR)" % (val, self.exchange(val))
         value = self.exchange(val) + selAmount - buyAmount
         print "in sum your profit is:\t%f EUR" % value
 
 if __name__ == "__main__":
-    b = Bitcoin("xxx")
+    # ugly, but only for testing puporse 
+    import sys, os
+    sys.path.append(os.path.dirname("../"))
+    from config import Config
+
+    b = Bitcoin(Config)
     b.fetchData()
     b.loadTransactionFile(sys.argv[1])
     
