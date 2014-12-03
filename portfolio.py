@@ -66,13 +66,14 @@ while 1:
     
     print 
 
-    bitcoin.printDetails(full=False)
+    bitcoin.printBitcoin()
+
+    print
+
+    #bitcoin.printDetails(full=False)
     bitcoin.store("test-bitcoin.csv")
     
-    print 
-
     bitcoinBalance = bitcoin.getBalance()
-
     print "Summary:"
     print "------------------------------"
     sumBtc = bitcoinBalance + havelockBalance

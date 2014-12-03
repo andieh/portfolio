@@ -5,6 +5,8 @@ import sys
 import time
 import datetime
 
+from utils import get_console_size
+
 from Transactions import *
 
 class BitcoinTransaction:
@@ -207,6 +209,46 @@ class Bitcoin:
     def getTrend(self):
         rate = self.getBuyRate()
         return ((self.btc2eur / rate) - 1.0) * 100
+
+    def printBitcoin(self):
+        console_width = get_console_size()["width"]
+        
+        fmts =    [".2f", ".2f", "s", ".2f", "s", ".5f", "s"]
+        header =  ["Trend (%)", "Buys", "", "Market (B)", 
+                   "Divs (B)", "Mean (B)", "Win (B)"]
+   
+        #fmts2 =   [".2f", "d", "d", "s", ".5f", ".5f", ".2f"]
+        fmts2 =   ["s", ".2f", ".2f", ".2f", "s", ".5f", ".2f"]
+        header2 = ["Overall (%)", "Sells", "Sum", "Book (B)", 
+                   "Fee (B)", "Cur (B)", "Win (E)"]
+    
+        colwidth = (console_width / len(header)) - 3
+        fill = " | "       
+
+        #print fill.join("{:>{}s}".format(h, colwidth) \
+        #        for f, h in zip(fmts, header))
+        #print fill.join("{:>{}s}".format(h, colwidth) \
+        #        for f, h in zip(fmts, header2))
+
+        print "-" * console_width
+        _s = "{1:-^{0}}".format(console_width, "> Bitcoin <")
+        print _s[console_width/5:] + _s[:console_width/5]
+    
+
+        data = [ self.getTrend(), self.transactions.getBuyQuantity(), 
+                 "", self.exchange(self.getBalance()), "", 
+                 self.getBuyRate(), "" ]
+        print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
+                 for f, d in zip(fmts, data))
+
+        data2 = [ "", self.transactions.getSellQuantity(), self.getBalance(), 
+                  self.transactions.getBuyAmount() - self.transactions.getSellAmount(), 
+                  "", self.btc2eur, 
+                  self.transactions.getSellAmount() + self.exchange(self.getBalance()) - self.transactions.getBuyAmount() ]
+        print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
+                 for f, d in zip(fmts2, data2))
+        print "-" * console_width
+        
 
     def printDetails(self, full=True):
         print "Bitcoin Account Details:" 
