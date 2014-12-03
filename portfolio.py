@@ -62,11 +62,12 @@ while 1:
     # some fancy output
     havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
     havelockBalance = havelock.getBalance()
-    havelock.store()
+    havelock.store("test-havelock.csv")
     
     print 
 
     bitcoin.printDetails(full=False)
+    bitcoin.store("test-bitcoin.csv")
     
     print 
 

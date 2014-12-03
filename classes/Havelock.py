@@ -188,12 +188,12 @@ class Havelock:
             print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
                      for f, d in zip(fmts2, data2))
 
-    def store(self):
+    def store(self, filename):
         content = "{:s}\n".format(Transaction().getHeader())
         for t in self.transactions.transactions:
             content += "{:s}\n".format(t)
 
-        f = open("test.csv", "w")
+        f = open(filename, "w")
         f.write(content)
         f.close()
 

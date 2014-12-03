@@ -173,12 +173,12 @@ class Bitcoin:
         self.transactions.addTransactions(transactions)
         self.transactions.sortTransactions()
 
-    def store(self):
+    def store(self, filename):
         content = "{:s}\n".format(BitcoinTransaction().getHeader())
         for t in self.transactions.transactions:
             content += "{:s}\n".format(t)
 
-        f = open("test.csv", "w")
+        f = open(filename, "w")
         f.write(content)
         f.close()
 
