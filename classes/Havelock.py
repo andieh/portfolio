@@ -5,7 +5,10 @@ import json
 from Transactions import *
 from Portfolio import *
 
-from utils import get_console_size
+try:
+    from utils import get_console_size
+except:
+    print "can't find utils class, maybe running this script standalone?"
 
 class Havelock:
     def __init__(self, conf):
@@ -244,3 +247,43 @@ class Havelock:
 
         return ret
 
+
+if __name__ == "__main__":
+    # ugly, but only for testing puporse 
+    import sys, os
+    sys.path.append(os.path.dirname("../"))
+    from config import Config
+
+    havelock = Havelock(Config)
+
+    if len(sys.argv) < 4:
+        print "test this script with python2 Havelock.py <transactionfile> <symbol> <price>"
+        sys.exit(1)
+    
+    havelock.loadTransactionFile(sys.argv[1])
+    sym = sys.argv[2]
+    print "watch symbol {:s}".format(sym)
+    s = havelock.portfolio.getSymbol(sym)
+    if s is None:
+        print "symbol not found"
+        sys.exit(1)
+    havelock.portfolio.setCurrentPrices({sym : float(sys.argv[3])})
+
+    print "total buy: {:f}".format(s.getBuyAmount())
+    print "total sell: {:f}".format(s.getSellAmount())
+    print "total dividend: {:f}".format(s.getDividendAmount())
+    print "total fee: {:f}".format(s.getFeeAmount())
+    print "total escrow: {:f}".format(s.getEscrowAmount())
+    print "mean price: {:f}, current price: {:f}".format(s.getMeanPrice(), havelock.portfolio.getCurrentPrice(sym))
+
+    print 
+
+    print "total value: {:f}".format(havelock.portfolio.getCurrentValue(sym))
+    print "current win: {:f}".format(havelock.portfolio.getCurrentWin(sym))
+    print "trend: {:f}%".format(havelock.portfolio.getTrend(sym))
+    print "trend: {:f}%".format(havelock.portfolio.getOverallTrend(sym))
+
+    print
+
+    print "balance (with Portfolio): {:f}".format(havelock.getBalance())
+    print "balance (with Portfolio): {:f}".format(havelock.getBalance(includePortfolio=False))

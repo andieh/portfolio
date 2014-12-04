@@ -297,6 +297,8 @@ class Transactions:
     def getFeeAmount(self, symbol=None):
         return self.sumAmount(self.getFee(symbol))
 
+    def getEscrowAmount(self, symbol=None):
+        return self.sumAmount(self.getEscrow(symbol))
 
 
 

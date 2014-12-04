@@ -7,11 +7,8 @@ class Symbol(Transactions):
 
     def getMeanPrice(self):
         tes = self.getBuy()
-        pr = 0.0
-        am = 0
-        for t in tes:
-            am += t.getQuantity()
-            pr += t.getAmount()
+        pr = self.getBuyAmount() + self.getSellAmount()
+        am = self.getBuyQuantity() + self.getSellQuantity()
         if am == 0:
             return 0.0
 
@@ -92,6 +89,14 @@ class Portfolio:
 
         c = self.getCurrentWin(symbol) + self.getCurrentValue(symbol)
         return ((c / p) - 1.0) * 100.0
+
+    def getSymbols(self):
+        return self.symbols
+
+    def getSymbol(self, symbol):
+        if not symbol in self.symbols:
+            return None
+        return self.symbols[symbol]
 
     def getCurrentWin(self, symbol):
         sym = self.symbols[symbol]
