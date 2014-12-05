@@ -139,7 +139,11 @@ class Bitcoin:
         self.transactions = Transactions()
 
     def fetchData(self):
-        r = requests.get("https://bitcoinapi.de/v1/%s/rate.json" % self.apiKey)
+        try:
+            r = requests.get("https://bitcoinapi.de/v1/%s/rate.json" % self.apiKey)
+        except requests.exceptions.ConnectionError:
+            print "failed to resolve bitcoinapi.de"
+            return 0.0
         try:
             j = json.loads(r.text)
             self.btc2eur = float(j["rate_weighted"])

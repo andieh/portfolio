@@ -40,6 +40,9 @@ class Havelock:
         except requests.exceptions.ConnectionError:
             print "failed to resolve havelockinvestments.com!"
             return None
+        except ValueError:
+            print "failed to get data from havelock"
+            return None
 
         return j
 
@@ -179,9 +182,12 @@ class Havelock:
             _s = "{1:-^{0}}".format(console_width, "> " + s + " <")
             print _s[console_width/5:] + _s[:console_width/5]
 
-            data =  [p.getTrend(s), t.getBuyQuantity(), "", p.getCurrentValue(s), t.getDividendAmount(), t.getMeanPrice(), p.getCurrentWin(s)]
+            data =  [p.getTrend(s), t.getBuyQuantity(), "", 
+                     p.getCurrentValue(s), t.getDividendAmount(), 
+                     t.getMeanPrice(), p.getCurrentWin(s) ]
+
             data2 = [p.getOverallTrend(s), t.getSellQuantity(), 
-                     t.getShareQuantity(), t.getBuyAmount(), t.getFeeAmount(),
+                     t.getShareQuantity(), p.getBookValue(s), t.getFeeAmount(),
                      p.getCurrentPrice(s), p.getCurrentWin(s) * btc2eur] 
 
             print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
@@ -269,8 +275,8 @@ if __name__ == "__main__":
         sys.exit(1)
     havelock.portfolio.setCurrentPrices({sym : float(sys.argv[3])})
 
-    print "total buy: {:f}".format(s.getBuyAmount())
-    print "total sell: {:f}".format(s.getSellAmount())
+    print "total buy ({:d}): {:f}".format(s.getBuyQuantity(), s.getBuyAmount())
+    print "total sell ({:d}): {:f}".format(s.getSellQuantity(), s.getSellAmount())
     print "total dividend: {:f}".format(s.getDividendAmount())
     print "total fee: {:f}".format(s.getFeeAmount())
     print "total escrow: {:f}".format(s.getEscrowAmount())
@@ -278,10 +284,11 @@ if __name__ == "__main__":
 
     print 
 
+    print "total book: {:f}".format(havelock.portfolio.getBookValue(sym))
     print "total value: {:f}".format(havelock.portfolio.getCurrentValue(sym))
     print "current win: {:f}".format(havelock.portfolio.getCurrentWin(sym))
     print "trend: {:f}%".format(havelock.portfolio.getTrend(sym))
-    print "trend: {:f}%".format(havelock.portfolio.getOverallTrend(sym))
+    print "overall trend: {:f}%".format(havelock.portfolio.getOverallTrend(sym))
 
     print
 

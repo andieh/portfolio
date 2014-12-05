@@ -6,9 +6,8 @@ class Symbol(Transactions):
         self.symbol = name
 
     def getMeanPrice(self):
-        tes = self.getBuy()
-        pr = self.getBuyAmount() + self.getSellAmount()
-        am = self.getBuyQuantity() + self.getSellQuantity()
+        pr = self.getBuyAmount() - self.getSellAmount() + self.getFeeAmount()
+        am = self.getBuyQuantity() - self.getSellQuantity()
         if am == 0:
             return 0.0
 
@@ -64,16 +63,26 @@ class Portfolio:
             value += self.symbols[symbol].getShareQuantity() * self.currentPrices[symbol]
         return value
     
-    def getBookValues(self, symbols=None):
-        ### TODO 
+    def getBookValue(self, symbols=None):
+        """
+        move to transactions?
+        """
         if type(symbols) == str:
             symbols = [symbols]
 
         if symbols is None:
             symbols = self.symbols.keys()
 
-        #self.port.getBuys()
-        return 0.0
+        buys = 0.0
+        sels = 0.0
+        fees = 0.0
+        for s in symbols:
+            sym = self.getSymbol(s)
+            buys += sym.getBuyAmount()
+            sels += sym.getSellAmount()
+            fees += sym.getFeeAmount()
+
+        return buys - sels + fees
 
     def getTrend(self, symbol):
         if self.symbols[symbol].getMeanPrice() == 0:
@@ -82,13 +91,12 @@ class Portfolio:
         return ((self.getCurrentPrice(symbol) / self.symbols[symbol].getMeanPrice()) - 1.0) * 100
     
     def getOverallTrend(self, symbol):
-        sym = self.symbols[symbol]
-        p = sym.getBuyAmount()
+        p = self.getBookValue(symbol)
         if self.isEqual(p, 0.0):
             return float("NaN")
 
-        c = self.getCurrentWin(symbol) + self.getCurrentValue(symbol)
-        return ((c / p) - 1.0) * 100.0
+        c = self.getCurrentWin(symbol)
+        return ((c / p)) * 100.0
 
     def getSymbols(self):
         return self.symbols
@@ -100,9 +108,10 @@ class Portfolio:
 
     def getCurrentWin(self, symbol):
         sym = self.symbols[symbol]
-        return sym.getSellAmount() - sym.getBuyAmount() + \
-               sym.getDividendAmount() - sym.getFeeAmount() + \
-               self.getCurrentValue(symbol)
+        book = self.getBookValue(symbol)
+        value = self.getCurrentValue(symbol)
+        dividend = sym.getDividendAmount()
+        return value + dividend - book
 
     def addTransactions(self, transactions, sy=None):
         """ 

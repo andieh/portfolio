@@ -84,6 +84,8 @@ class Transaction:
                 self.symbol = r[4]
             if r[5]:
                 self.amount = float(r[5])
+                if self.type == "buy" and self.amount < 0:
+                    self.amount *= -1
             if r[6]:
                 self.balance = float(r[6])
             self.details = r[7]
@@ -98,6 +100,9 @@ class Transaction:
             self.ts = int(time.mktime(datetime.datetime.strptime(raw["dt"], "%Y-%m-%d %H:%M:%S").timetuple()))
             self.hid = int(raw["id"])
             self.amount = float(raw["amount"])
+            if self.type == "buy" and self.amount < 0:
+                self.amount *= -1
+
             self.balance = float(raw["balance"])
             if raw["units"] is not None:
                 self.qty = int(raw["units"])
