@@ -92,9 +92,8 @@ class Havelock:
             t = Transaction()
             if t.parse(tr):
                 ts.append(t)
-        new = self.transactions.getNewTransactions(ts)
-        self.transactions.addTransactions(new)
-        self.portfolio.addTransactions(new)
+
+        self.mergeTransactions(ts)
 
     def loadTransactionFile(self, filename):
         f = open(filename, "r")
@@ -117,10 +116,37 @@ class Havelock:
 
         por = self.portfolio.getCurrentValue()
         return (bal+por)
-
         
-    def printDetails(self, full=True, btc2eur=None):
+    def mergeTransactionFile(self, filename):
+        f = open(filename)
+        content = f.read()
+        f.close()
+        ts = []
+        for tr in content.split("\n"):
+            t = Transaction()
+            if t.parse(tr):
+                ts.append(t)
+        self.mergeTransactions(ts)
 
+    def mergeTransactions(self, transactions):
+        cnt = 0
+        for t in transactions:
+            if self.insertTransaction(t):
+                cnt += 1
+
+        self.transactions.sortTransactions()
+        self.portfolio.sortTransactions()
+        if cnt > 0:
+            print "merge {:d} new transactions".format(cnt)
+
+    def insertTransaction(self, transaction):
+        if not transaction in self.transactions:
+            self.transactions.addTransactions([transaction])
+            self.portfolio.addTransactions([transaction], transaction.getSymbol())
+            return True
+        return False
+
+    def printDetails(self, full=True, btc2eur=None):
         btc2eur = btc2eur or 1.0
 
         print "Havelock Account Details:" 
@@ -262,35 +288,52 @@ if __name__ == "__main__":
 
     havelock = Havelock(Config)
 
-    if len(sys.argv) < 4:
-        print "test this script with python2 Havelock.py <transactionfile> <symbol> <price>"
+    if len(sys.argv) == 4:
+        print "check a symbol"
+        havelock.loadTransactionFile(sys.argv[1])
+        sym = sys.argv[2]
+        print "watch symbol {:s}".format(sym)
+        s = havelock.portfolio.getSymbol(sym)
+        if s is None:
+            print "symbol not found"
+            sys.exit(1)
+        havelock.portfolio.setCurrentPrices({sym : float(sys.argv[3])})
+
+        print "total buy ({:d}): {:f}".format(s.getBuyQuantity(), s.getBuyAmount())
+        print "total sell ({:d}): {:f}".format(s.getSellQuantity(), s.getSellAmount())
+        print "total dividend: {:f}".format(s.getDividendAmount())
+        print "total fee: {:f}".format(s.getFeeAmount())
+        print "total escrow: {:f}".format(s.getEscrowAmount())
+        print "mean price: {:f}, current price: {:f}".format(s.getMeanPrice(), havelock.portfolio.getCurrentPrice(sym))
+
+        print 
+
+        print "total book: {:f}".format(havelock.portfolio.getBookValue(sym))
+        print "total value: {:f}".format(havelock.portfolio.getCurrentValue(sym))
+        print "current win: {:f}".format(havelock.portfolio.getCurrentWin(sym))
+        print "trend: {:f}%".format(havelock.portfolio.getTrend(sym))
+        print "overall trend: {:f}%".format(havelock.portfolio.getOverallTrend(sym))
+
+        print
+
+        print "balance: {:f}".format(havelock.getBalance(includePortfolio=False))
+        print "balance (with Portfolio): {:f}".format(havelock.getBalance())
+
+    elif len(sys.argv) == 3:
+        havelock.loadTransactionFile(sys.argv[1])
+        print "balance: {:f}".format(havelock.getBalance(includePortfolio=False))
+        print "balance (with Portfolio): {:f}".format(havelock.getBalance())
+
+        havelock.mergeTransactionFile(sys.argv[2])
+        print "balance: {:f}".format(havelock.getBalance(includePortfolio=False))
+        print "balance (with Portfolio): {:f}".format(havelock.getBalance())
+
+        havelock.store(sys.argv[1])
+
+    else:
+        print "test this script:"
+        print "\t- test a symbol:"
+        print "\t  python2 Havelock.py <transactionfile> <symbol> <price>"
+        print "\t- merge a new transaction file"
+        print "\t  python2 Havelock.py <transactionfile> <mergeFile>"
         sys.exit(1)
-    
-    havelock.loadTransactionFile(sys.argv[1])
-    sym = sys.argv[2]
-    print "watch symbol {:s}".format(sym)
-    s = havelock.portfolio.getSymbol(sym)
-    if s is None:
-        print "symbol not found"
-        sys.exit(1)
-    havelock.portfolio.setCurrentPrices({sym : float(sys.argv[3])})
-
-    print "total buy ({:d}): {:f}".format(s.getBuyQuantity(), s.getBuyAmount())
-    print "total sell ({:d}): {:f}".format(s.getSellQuantity(), s.getSellAmount())
-    print "total dividend: {:f}".format(s.getDividendAmount())
-    print "total fee: {:f}".format(s.getFeeAmount())
-    print "total escrow: {:f}".format(s.getEscrowAmount())
-    print "mean price: {:f}, current price: {:f}".format(s.getMeanPrice(), havelock.portfolio.getCurrentPrice(sym))
-
-    print 
-
-    print "total book: {:f}".format(havelock.portfolio.getBookValue(sym))
-    print "total value: {:f}".format(havelock.portfolio.getCurrentValue(sym))
-    print "current win: {:f}".format(havelock.portfolio.getCurrentWin(sym))
-    print "trend: {:f}%".format(havelock.portfolio.getTrend(sym))
-    print "overall trend: {:f}%".format(havelock.portfolio.getOverallTrend(sym))
-
-    print
-
-    print "balance (with Portfolio): {:f}".format(havelock.getBalance())
-    print "balance (with Portfolio): {:f}".format(havelock.getBalance(includePortfolio=False))

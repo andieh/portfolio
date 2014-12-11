@@ -20,9 +20,13 @@ class Transaction:
 
     def __eq__(self, other):
         # id should be enough, but transaction export to csv has no id!
-        sameTs = (int(self.ts) == int(other.getTimestamp()))
-        sameId = (self.symbol == other.getSymbol())
-        return (sameTs and sameId)
+        #print "check {:s} and {:s}".format(self, other)
+        sameTs = (int(self.getTimestamp()) == int(other.getTimestamp()))
+        sameSymbol = (self.getSymbol() == other.getSymbol())
+        #print "check ts {:d} with {:d}: {:b}".format(int(self.getTimestamp()), int(other.getTimestamp()), sameTs)
+        #print "check symbol {:s} with {:s}: {:b}".format(self.getSymbol(), other.getSymbol(), sameSymbol)
+        #print "check {:b}".format((sameTs and sameSymbol))
+        return (sameTs and sameSymbol)
 
     def __lt__(self, other):
         return self.ts < other.ts
@@ -82,6 +86,8 @@ class Transaction:
                 self.price = float(r[3])
             if r[4] != '':
                 self.symbol = r[4]
+                if self.symbol == "None":
+                    self.symbol = None
             if r[5]:
                 self.amount = float(r[5])
                 if self.type == "buy" and self.amount < 0:

@@ -90,6 +90,10 @@ class Portfolio:
 
         return ((self.getCurrentPrice(symbol) / self.symbols[symbol].getMeanPrice()) - 1.0) * 100
     
+    def sortTransactions(self):
+        for s in self.symbols.values():
+            s.sortTransactions()
+
     def getOverallTrend(self, symbol):
         p = self.getBookValue(symbol)
         if self.isEqual(p, 0.0):

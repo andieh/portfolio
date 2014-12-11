@@ -200,7 +200,6 @@ class Bitcoin:
         f = open(filename, "r")
         content = f.read()
         f.close()
-
         cnt = 0
         for line in content.split("\n"):
             if not line:
