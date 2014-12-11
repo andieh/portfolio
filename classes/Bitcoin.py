@@ -5,7 +5,11 @@ import sys
 import time
 import datetime
 
-from utils import get_console_size
+try:
+    from utils import get_console_size
+except:
+    # not needed in a testing environment
+    pass
 
 from Transactions import *
 
@@ -53,54 +57,69 @@ class BitcoinTransaction:
     def getBalance(self):
         return self.balance
 
-    def parse(self, raw):
-        self.ts = int(time.mktime(datetime.datetime.strptime(raw[0].replace("\"",""), "%Y-%m-%d %H:%M:%S").timetuple()))
-    
-        if raw[1] == "Kauf":
-            self.type = "buy"
-        elif raw[1] == "Verkauf":
-            self.type = "sell"
-        elif raw[1] == "Auszahlung":
-            self.type = "withdraw"
-        elif raw[1] == "Einzahlung":
-            self.type = "deposit"
-        elif raw[1] == "\"Welcome Btc\"":
-            self.type = "deposit"
-            raw[2] = "0.1 BTC welcome bonus to bitcoin.de!"
-        elif raw[1] == "Registrierung":
+    def parse(self, line):
+        raw = line.split(";")
+        if raw[0] == "Datum":
             return False
-        else:
-            self.type = raw[1]
 
-        self.details = raw[2]
-
-        if raw[3]:
-            self.price = float(raw[3].replace(",", ""))
-
-        if raw[4]:
-            self.eurBefore = float(raw[4].replace(",",""))
+        try:
+            self.ts = int(time.mktime(datetime.datetime.strptime(raw[0].replace("\"",""), "%Y-%m-%d %H:%M:%S").timetuple()))
         
-        if raw[5]:
-            self.btcAfter = float(raw[5].replace(",",""))
+            if raw[1] == "Kauf":
+                self.type = "buy"
+            elif raw[1] == "Verkauf":
+                self.type = "sell"
+            elif raw[1] == "Auszahlung":
+                self.type = "withdraw"
+            elif raw[1] == "Einzahlung":
+                self.type = "deposit"
+            elif raw[1] == "\"Welcome Btc\"":
+                self.type = "deposit"
+                raw[2] = "0.1 BTC welcome bonus to bitcoin.de!"
+            elif raw[1] == "Registrierung":
+                return False
+            else:
+                self.type = raw[1]
+
+            self.details = raw[2]
+
+            if raw[3]:
+                self.price = float(raw[3].replace(",", ""))
+
+            if raw[4]:
+                self.eurBefore = float(raw[4].replace(",",""))
+            
+            if raw[5]:
+                self.btcAfter = float(raw[5].replace(",",""))
+            
+            if raw[6]:
+                self.eurAfter = float(raw[6].replace(",",""))
+
+            if raw[7]:
+                self.amount = float(raw[7].replace(",", ""))
+
+            self.qty = float(raw[8].replace(",", ""))
+            if self.type == "withdraw" or self.type == "sell":
+                self.qty *= -1
+            if self.type == "deposit" or self.type == "withdraw":
+                self.amount = self.qty
+
+            self.balance = float(raw[9].replace(",", ""))
+
+            return True
+
+        except Exception, e:
+            print "failed to parse {:s}, error: {:s}".format(raw, str(e))
         
-        if raw[6]:
-            self.eurAfter = float(raw[6].replace(",",""))
-
-        if raw[7]:
-            self.amount = float(raw[7].replace(",", ""))
-
-        self.qty = float(raw[8].replace(",", ""))
-        if self.type == "withdraw" or self.type == "sell":
-            self.qty *= -1
-        if self.type == "deposit" or self.type == "withdraw":
-            self.amount = self.qty
-
-        self.balance = float(raw[9].replace(",", ""))
-
-        return True
+        return False
 
     def getHeader(self):
         return "Datum;Typ;Referenz;\"Kurs (EUR/BTC)\";\"BTC vor Gebuehr\";\"EUR vor Gebuehr\";\"BTC nach Gebuehr\";\"EUR nach Gebuehr\";\"Zu- / Abgang\";Kontostand"
+
+    def __eq__(self, other):
+        sameTs = (int(self.ts) == int(other.getTimestamp()))
+        sameId = (self.symbol == other.getSymbol())
+        return (sameTs and sameId)
 
     def __str__(self):
         qty = self.qty
@@ -169,15 +188,37 @@ class Bitcoin:
         for line in content.split("\n"):
             if not line:
                 continue
-            raw = line.split(";")
-            if raw[0] == "Datum":
-                continue
             b = BitcoinTransaction()
-            if b.parse(raw):
+            if b.parse(line):
                 transactions.append(b)
 
         self.transactions.addTransactions(transactions)
         self.transactions.sortTransactions()
+
+    def mergeTransactionFile(self, filename):
+        # load file
+        f = open(filename, "r")
+        content = f.read()
+        f.close()
+
+        cnt = 0
+        for line in content.split("\n"):
+            if not line:
+                continue
+            b = BitcoinTransaction()
+            if b.parse(line):
+                if self.insertTransaction(b):
+                    print "added transaction {:s}".format(str(b))
+                    cnt +=1
+        
+        self.transactions.sortTransactions()
+        print "merged {:d} transactions".format(cnt)
+
+    def insertTransaction(self, transaction):
+        if not transaction in self.transactions:
+            self.transactions.addTransactions([transaction])
+            return True
+        return False
 
     def store(self, filename):
         content = "{:s}\n".format(BitcoinTransaction().getHeader())
@@ -212,6 +253,8 @@ class Bitcoin:
     
     def getTrend(self):
         rate = self.getBuyRate()
+        if self.transactions.getBuyQuantity() == 0:
+            return 0.0
         return ((self.btc2eur / rate) - 1.0) * 100
 
     def printBitcoin(self):
@@ -259,7 +302,10 @@ class Bitcoin:
             print "total buys:\t\t%d BTC for %0.2f EUR (rate: %0.4f EUR)" % (buy, buyAmount, self.getBuyRate())
 
             sel = self.transactions.getSellQuantity()
-            mean = selAmount / sel
+            if sel == 0:
+                mean = 0.0
+            else:
+                mean = selAmount / sel
             print "total sells:\t\t%d BTC for %0.2f EUR (rate: %0.4f EUR)" % (sel, selAmount, mean)
 
             wit = self.transactions.getWithdrawAmount()
@@ -281,10 +327,15 @@ if __name__ == "__main__":
     from config import Config
 
     b = Bitcoin(Config)
-    b.fetchData()
+    #b.fetchData()
     b.loadTransactionFile(sys.argv[1])
     
     b.printDetails()
 
-    b.store()
+    if len(sys.argv) == 3:
+        mf = sys.argv[2]
+        print "merge csv file: {:s}".format(mf)
+        b.mergeTransactionFile(mf)
+        b.printDetails()
+        b.store(sys.argv[1])
 

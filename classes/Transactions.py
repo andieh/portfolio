@@ -159,6 +159,17 @@ class Transactions:
 
         return new
 
+    def __iter__(self):
+        for transaction in self.transactions:
+            yield transaction
+
+    def __contains__(self, obj):
+        for t in self:
+            if t == obj:
+                return True
+
+        return False
+
     def getTransactions(self, symbol=None, start=None, end=None):
         # return all if nothing was selected
         if symbol is None and start is None and end is None:
