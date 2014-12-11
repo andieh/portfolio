@@ -1,4 +1,5 @@
 import requests
+import time
 
 class Blockchain:
     def __init__(self):
@@ -23,10 +24,15 @@ class Blockchain:
         interval - average time between blocks in seconds
         eta - estimated time until the next block (in seconds)
         avgtxnumber - Average number of transactions per block (100 Default)
+        hashrate - Estimated network hash rate in gigahash
         """
-        names = ["getdifficulty", "getblockcount", "latesthash", "bcperblock", "totalbc", "probability", "hashestowin", "nextretarget", "avgtxsize", "avgtxvalue", "interval", "eta", "avgtxnumber"]
+        names = ["getdifficulty", "getblockcount", "latesthash", \
+                 "bcperblock", "totalbc", "probability", "hashestowin", \
+                 "nextretarget", "avgtxsize", "avgtxvalue", "interval", \
+                 "eta", "avgtxnumber", "hashrate" ]
         for name in names:
             self.data[name] = self.fetchData(name)
+            time.sleep(10)
 
 
     def fetchData(self, name):
