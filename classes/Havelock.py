@@ -170,11 +170,13 @@ class Havelock:
             print "-" * get_console_size()["width"]
         bal = self.transactions.getBalance()
         
-        print "current balance:\t{:>29f} BTC".format(bal)
+        print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("current balance: ", bal, bal*btc2eur)
         por = self.portfolio.getCurrentValue()
         
-        print "portfolio value:\t{:>29f} BTC".format(por)
-        print "in sum your profit is:{:>31f} BTC".format(wit + por + bal - dep)
+        print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("portfolio value: ", por, por*btc2eur)
+        print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("total deposit: ", dep, dep*btc2eur)
+        summ = wit + por + bal - dep
+        print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("in sum: ", summ, summ*btc2eur)
         print "-" * get_console_size()["width"]
 
     def printPortfolio(self, btc2eur=None):

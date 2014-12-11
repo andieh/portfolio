@@ -72,14 +72,16 @@ while 1:
 
     print "Summary:"
     print "-" * get_console_size()["width"]
+    print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Havelock: ", havelockBalance, bitcoin.exchange(havelockBalance))
+    print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Bitcoin: ", bitcoinBalance, bitcoin.exchange(bitcoinBalance))
+    print "-" * get_console_size()["width"]
     sumBtc = bitcoinBalance + havelockBalance
     sumEur = bitcoin.exchange(sumBtc)
-    print "Total balance: {:>38f} BTC".format(sumBtc)
-    print "{:>53f} EUR".format(sumEur)
+    print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Total Balance: ", sumBtc,sumEur)
     invest = bitcoin.getInvest()
-    print "Total sum of invest: {:>32f} EUR".format(invest)
+    print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total sum of investment: ", "", invest)
     print "-" * get_console_size()["width"]
-    print "in sum your profit is: {:>30f} EUR".format(sumEur + invest)
+    print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total profit: ", "", sumEur + invest)
     print "-" * get_console_size()["width"]
     break
 
