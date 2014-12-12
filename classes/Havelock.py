@@ -70,7 +70,6 @@ class Havelock:
 
     def fetchBalance(self):
         """ get balance """
-        print "get balance from havelock"
         j = self.fetchData("balance")
         if j is None:
             return None
@@ -78,7 +77,7 @@ class Havelock:
         balance = j["balance"]
         self.havelockBalance = float(balance["balance"])
         self.havelockBalanceAvailable = float(balance["balanceavailable"])
-        print "havelock balance: {:f} BTC".format(self.havelockBalance)
+        #print "havelock balance: {:f} BTC".format(self.havelockBalance)
 
     def fetchTransactions(self):
         """ get history """
@@ -110,6 +109,14 @@ class Havelock:
             self.portfolio.addTransactions(self.transactions.getTransactions(symbol=s), s)
     
     def getBalance(self, includePortfolio=True):
+        bal = self.havelockBalance+self.havelockBalanceAvailable
+        if not includePortfolio:
+            return bal
+
+        por = self.portfolio.getCurrentValue()
+        return (bal+por)
+
+    def calculateBalance(self, includePortfolio=True):
         bal = self.transactions.getBalance()
         if not includePortfolio:
             return bal
@@ -168,7 +175,7 @@ class Havelock:
 
             self.printPortfolio(btc2eur=btc2eur)
             print "-" * get_console_size()["width"]
-        bal = self.transactions.getBalance()
+        bal = self.getBalance(includePortfolio=False)
         
         print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("current balance: ", bal, bal*btc2eur)
         por = self.portfolio.getCurrentValue()

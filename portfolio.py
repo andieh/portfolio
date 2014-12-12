@@ -53,6 +53,8 @@ while 1:
     havelock.fetchTransactions()
     # get current prices
     havelock.fetchPortfolio()
+    # get current Balance
+    havelock.fetchBalance()
     
     # fetch btc.de data, if available
     if bitcoin.fetchData() == 0.0 and args.btc2eur is not None:
