@@ -23,12 +23,13 @@ class Transaction:
         sameTs = (int(self.getTimestamp()) == int(other.getTimestamp()))
         sameSymbol = (self.getSymbol() == other.getSymbol())
         sameType = (self.getType() == other.getType())
+        sameQuantity = (self.getQuantity() == other.getQuantity())
         """if (sameTs and sameSymbol and sameType) and other.getType() == "sell":
             print "check {:s} and {:s}".format(self, other)
             print "check ts {:d} with {:d}: {:b}".format(int(self.getTimestamp()), int(other.getTimestamp()), sameTs)
             print "check symbol {:s} with {:s}: {:b}".format(self.getSymbol(), other.getSymbol(), sameSymbol)
             print "check {:b}".format((sameTs and sameSymbol))"""
-        return (sameTs and sameSymbol and sameType)
+        return (sameTs and sameSymbol and sameType and sameQuantity)
 
     def __lt__(self, other):
         return self.ts < other.ts
