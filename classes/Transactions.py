@@ -93,7 +93,7 @@ class Transaction:
                     self.symbol = None
             if r[5]:
                 self.amount = float(r[5])
-                if self.type == "buy" and self.amount < 0:
+                if (self.type == "fee" or self.type == "buy") and self.amount < 0:
                     self.amount *= -1
             if r[6]:
                 self.balance = float(r[6])
