@@ -73,6 +73,8 @@ class BitcoinTransaction:
                 self.type = "withdraw"
             elif raw[1] == "Einzahlung":
                 self.type = "deposit"
+            elif raw[1] == "Kurs":
+                self.type = "rate"
             elif raw[1] == "\"Welcome Btc\"":
                 self.type = "deposit"
                 raw[2] = "0.1 BTC welcome bonus to bitcoin.de!"
@@ -85,6 +87,8 @@ class BitcoinTransaction:
 
             if raw[3]:
                 self.price = float(raw[3].replace(",", ""))
+                if self.type == "rate" and self.price < 0.0001:
+                    return False
 
             if raw[4]:
                 self.eurBefore = float(raw[4].replace(",",""))
@@ -218,6 +222,25 @@ class Bitcoin:
             self.transactions.addTransactions([transaction])
             return True
         return False
+    
+    def getRateAt(self, timestamp):
+        lastRate = None
+        lastAct = None
+        for t in self.transactions:
+            if t.getTimestamp() > timestamp:
+                break
+    
+            if t.getType() == "rate":
+                lastRate = t.getPrice()
+            elif t.getType() == "sell" or t.getType() == "buy" or t.getType() == "buyipo":
+                lastAct = t.getPrice()
+
+        # no rate found, take last one
+        if lastRate is not None:
+            return lastRate
+        elif lastAct is not None:
+            return lastAct
+        return 0.0
 
     def store(self, filename):
         content = "{:s}\n".format(BitcoinTransaction().getHeader())
@@ -234,6 +257,9 @@ class Bitcoin:
         wit = self.transactions.getWithdrawAmount()
         dep = self.transactions.getDepositAmount()
         return (dep+buy-wit-sel)
+
+    def setEndDate(self, timestamp):
+        self.transactions.setEndDate(timestamp)
 
     def getInvest(self):
         buy = self.transactions.getBuyAmount() 

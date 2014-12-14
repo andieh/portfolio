@@ -87,6 +87,8 @@ class Transaction:
                 self.qty = 0
             if r[3]:
                 self.price = float(r[3])
+                if self.price < 0:
+                    self.price *= -1
             if r[4] != '':
                 self.symbol = r[4]
                 if self.symbol == "None":
@@ -152,6 +154,10 @@ class Transactions:
         self.highestHid = 0
         self.minTimestamp = 1*10e10
         self.maxTimestamp = -1
+        self.endDate = None
+
+    def setEndDate(self, endDate):
+        self.endDate = endDate
 
     def getNewTransactions(self, transactions):
         # first sort them by timestamp
@@ -267,6 +273,15 @@ class Transactions:
 
         ret.sort(key=operator.attrgetter('ts'))
 
+        if self.endDate is not None:
+            ret2 = []
+            for r in ret:
+                if r.getTimestamp() > self.endDate:
+                    break
+                ret2.append(r)
+            return ret2
+
+
         return ret
 
     def getBuy(self, symbol=None):
@@ -299,10 +314,6 @@ class Transactions:
    
     def sumAmount(self, array):
         return sum(x.getAmount() for x in array)
-        #sum = 0.0
-        #for t in array:
-        #    sum += t.getAmount()
-        #return sum
 
     def getSellAmount(self, symbol=None):
         return self.sumAmount(self.getSell(symbol))
@@ -325,6 +336,12 @@ class Transactions:
     def getEscrowAmount(self, symbol=None):
         return self.sumAmount(self.getEscrow(symbol))
 
+    def getBookAmount(self, symbol=None):
+        buys = self.getBuyAmount(symbol)
+        sells = self.getSellAmount(symbol)
+        fees = self.getFeeAmount(symbol)
+
+        return buys - sells + fees
 
 
     def sumQuantity(self, array):

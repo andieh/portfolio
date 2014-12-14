@@ -48,74 +48,42 @@ else:
  
 
 
-while 1:
-    # update transactions
-    havelock.fetchTransactions()
-    # get current prices
-    havelock.fetchPortfolio()
-    # get current Balance
-    havelock.fetchBalance()
-    
-    # fetch btc.de data, if available
-    if bitcoin.fetchData() == 0.0 and args.btc2eur is not None:
-        bitcoin.btc2eur = args.btc2eur
+# update transactions
+havelock.fetchTransactions()
+# get current prices
+havelock.fetchPortfolio()
+# get current Balance
+havelock.fetchBalance()
+
+# fetch btc.de data, if available
+if bitcoin.fetchData() == 0.0 and args.btc2eur is not None:
+    bitcoin.btc2eur = args.btc2eur
 
 
-    # some fancy output
-    havelock.printPortfolio(btc2eur=bitcoin.btc2eur)
-    havelock.store("test-havelock.csv")
-    
-    bitcoin.printBitcoin()
-    bitcoin.store("test-bitcoin.csv")
-    
-    havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
-    havelockBalance = havelock.getBalance()
-    bitcoinBalance = bitcoin.getBalance()
+# some fancy output
+havelock.printPortfolio(btc2eur=bitcoin.btc2eur)
+havelock.store("test-havelock.csv")
 
-    print "Summary:"
-    print "-" * get_console_size()["width"]
-    print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Havelock: ", havelockBalance, bitcoin.exchange(havelockBalance))
-    print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Bitcoin: ", bitcoinBalance, bitcoin.exchange(bitcoinBalance))
-    print "-" * get_console_size()["width"]
-    sumBtc = bitcoinBalance + havelockBalance
-    sumEur = bitcoin.exchange(sumBtc)
-    print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Total Balance: ", sumBtc,sumEur)
-    invest = bitcoin.getInvest()
-    print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total sum of investment: ", "", invest)
-    print "-" * get_console_size()["width"]
-    print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total profit: ", "", sumEur + invest)
-    print "-" * get_console_size()["width"]
-    break
+bitcoin.printBitcoin()
+bitcoin.store("test-bitcoin.csv")
 
-    time.sleep(10)
+havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
+havelockBalance = havelock.getBalance()
+bitcoinBalance = bitcoin.getBalance()
+
+print "Summary:"
+print "-" * get_console_size()["width"]
+print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Havelock: ", havelockBalance, bitcoin.exchange(havelockBalance))
+print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Bitcoin: ", bitcoinBalance, bitcoin.exchange(bitcoinBalance))
+print "-" * get_console_size()["width"]
+sumBtc = bitcoinBalance + havelockBalance
+sumEur = bitcoin.exchange(sumBtc)
+print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Total Balance: ", sumBtc,sumEur)
+invest = bitcoin.getInvest()
+print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total sum of investment: ", "", invest)
+print "-" * get_console_size()["width"]
+print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total profit: ", "", sumEur + invest)
+print "-" * get_console_size()["width"]
 
 
-"""
-# debug win / loss shit
-data = havelock.getActivity()
-cnt = 0
-data2 = []
-for (ts, balance) in data:
-    data2.append((cnt, balance))
-    cnt +=1
-
-data3 = havelock.getData("B.MINE")
-data4 = havelock.getData("AMHASH1")
-data5 = havelock.getData("SCRYPT")
-data6 = havelock.getData("PETA")
-
-import numpy as np
-import matplotlib.pyplot as plot
-
-fig = plot.figure()
-ax = fig.add_subplot(111)
-(xes, yes) = zip(*data3)
-ax.plot(xes, yes, 'b-')
-(xes, yes) = zip(*data4)
-ax.plot(xes, yes, 'r-')
-(xes, yes) = zip(*data5)
-ax.plot(xes, yes, 'k-')
-(xes, yes) = zip(*data6)
-ax.plot(xes, yes, 'y-')
-plot.show()"""
 

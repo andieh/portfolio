@@ -22,6 +22,9 @@ class Symbol(Transactions):
                 return sells[-1].getPrice()
         return buys[-1].getPrice()
 
+    def getName(self):
+        return self.symbol
+
 class Portfolio:
     def __init__(self, epsilon=1e-12):
         self.symbols = {}
