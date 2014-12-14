@@ -71,11 +71,26 @@ btcCount = []
 
 cnt = 0
 symbols = havelock.portfolio.getSymbols().values()
+
+depotMode = None
+oldDepositValue = 0.0
+oldWithdrawValue = 0.0
+reduceBtc=0.0
+
+
 for d in dates:
     ds = datetime.datetime.fromtimestamp(d)
     des.append(ds)
     #print "{:d} transactions until {:s}:".format(cnt, ds.strftime("%Y-%m-%d %H:%M:%s"))
     havelock.setEndDate(d)
+
+    deposit = havelock.transactions.getDepositAmount()
+    if deposit != oldDepositValue:
+        reduceBtc = deposit-oldDepositValue
+        #print "{:d} entering deposit mode, deposit {:f} btc to havelock".format(cnt, reduceBtc)
+        oldDepositValue = deposit
+        depotMode = True
+
     bitcoin.setEndDate(d)
     val = 0.0
     por = 0.0
@@ -108,11 +123,21 @@ for d in dates:
             xes[name].append(d)
             dxes[name].append(ds)
 
+    withdraw = bitcoin.transactions.getWithdrawAmount()
+    if withdraw != oldWithdrawValue:
+        diff = withdraw-oldWithdrawValue
+        #print "{:d} withdraw {:f} btc from bitcoin.de".format(cnt, diff)
+        oldWithdrawValue = withdraw
+        if (reduceBtc - diff) < 0.0001 and (reduceBtc - diff) > -0.0001:
+            depotMode = False
+            reduceBtc = 0.0
+
+
     btc = bitcoin.getRateAt(d)
     btcBalance = bitcoin.getBalance()
-    btcCount.append(btcBalance+havelock.getBalance(False)+por)
+    btcCount.append(btcBalance+havelock.getBalance(False)+por-reduceBtc)
     invest = bitcoin.getInvest()
-    bwin = (btcBalance * btc) + (por * btc) + invest
+    bwin = ((btcBalance-reduceBtc) * btc) + (por * btc) + invest
     bwins.append(bwin)
     btcX.append(ds)
     btcY.append(btc)
