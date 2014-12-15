@@ -62,10 +62,10 @@ if bitcoin.fetchData() == 0.0 and args.btc2eur is not None:
 
 # some fancy output
 havelock.printPortfolio(btc2eur=bitcoin.btc2eur)
-havelock.store("test-havelock.csv")
+havelock.store(Config.hl_history)
 
 bitcoin.printBitcoin()
-bitcoin.store("test-bitcoin.csv")
+bitcoin.store(Config.btc_de_history)
 
 havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
 havelockBalance = havelock.getBalance()
