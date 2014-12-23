@@ -265,13 +265,13 @@ class Havelock:
         p = self.portfolio
         for s in self.portfolio.symbols:
             t = p.getSymbol(s)
-            print "[{:s}] shares: {:d}, value: {:0.3f}, rate: {:0.6f}, trend: {:0.2f}".format(t.getName(), t.getShareQuantity(), p.getCurrentValue(s), p.getCurrentPrice(s), p.getTrend(s))
+            print "[{:s}]\nshares:{:d},value:{:0.3f},rate:{:0.6f},trend:{:0.2f}".format(t.getName(), t.getShareQuantity(), p.getCurrentValue(s), p.getCurrentPrice(s), p.getTrend(s))
         wit = self.transactions.getWithdrawAmount()
         dep = self.transactions.getDepositAmount()
         bal = self.getBalance(includePortfolio=False)
         por = self.portfolio.getCurrentValue()
         summ = wit + por + bal - dep
-        print "[Havelock] sum: {:0.5f}".format(summ)
+        print "[Havelock]\nsum:{:0.5f}".format(summ)
 
     def store(self, filename):
         content = "{:s}\n".format(Transaction().getHeader())
