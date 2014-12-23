@@ -296,6 +296,10 @@ class Transactions:
         sells = self.getType("sell", symbol)
         return sells
 
+    def getBuyback(self, symbol=None):
+        buyback = self.getType("buyback", symbol)
+        return buyback
+
     def getDividend(self, symbol=None):
         return self.getType("dividend", symbol)
 
@@ -315,6 +319,9 @@ class Transactions:
    
     def sumAmount(self, array):
         return sum(x.getAmount() for x in array)
+
+    def getBuybackAmount(self, symbol=None):
+        return self.sumAmount(self.getBuyback(symbol))
 
     def getSellAmount(self, symbol=None):
         return self.sumAmount(self.getSell(symbol))
