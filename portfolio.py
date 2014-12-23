@@ -74,7 +74,7 @@ invest = bitcoin.getInvest()
 if args.plain:
     havelock.plain()
     bitcoin.plain()
-    print "[Sum] invest: {:0.3f}, sumBtc: {:0.3f}, sumEur: {:0.3f}, profit: {:0.3f}".format(invest, sumBtc, sumEur, sumEur+invest)
+    print "[Sum]\ninvest:{:0.3f},sumBtc:{:0.3f},sumEur:{:0.3f},profit:{:0.3f}".format(invest, sumBtc, sumEur, sumEur+invest)
     sys.exit(0)
 
 # some fancy output
