@@ -346,7 +346,7 @@ class Bitcoin:
         print "in sum your profit is:\t%f EUR" % value
 
     def plain(self):
-        print "[Bitcoin.de]\nrate:{:0.6f},trend:{:0.2f},balance:{:0.6f}".format(self.btc2eur, self.getTrend(), self.getBalance())
+        print "[Bitcoin.de]\nrate:{:0.2f},trend:{:0.2f},balance:{:0.6f}".format(self.btc2eur, self.getTrend(), self.getBalance())
 
 if __name__ == "__main__":
     # ugly, but only for testing puporse 
