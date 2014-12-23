@@ -216,7 +216,7 @@ class Havelock:
         print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("in sum: ", summ, summ*btc2eur)
         print "-" * get_console_size()["width"]
 
-    def printPortfolio(self, btc2eur=None):
+    def printPortfolio(self, btc2eur=None, allSymbols=True):
         p = self.portfolio
         console_width = get_console_size()["width"]
         
@@ -242,6 +242,8 @@ class Havelock:
 
         for s in self.portfolio.symbols:
             t = p.symbols[s]
+            if not allSymbols and t.getShareQuantity() == 0:
+                continue
                
             print "-" * console_width
             _s = "{1:-^{0}}".format(console_width, "> " + s + " <")

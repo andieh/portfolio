@@ -32,6 +32,9 @@ cp.add_argument("--btc2eur", type=float, default=None,
 cp.add_argument("-p", "--plain", action="store_true",
         help="print data in plain format for parsing later")
 
+cp.add_argument("-s", "--show-all", action="store_true",
+        help="show all symbols in your portfolio", default=False)
+
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
@@ -78,7 +81,7 @@ if args.plain:
     sys.exit(0)
 
 # some fancy output
-havelock.printPortfolio(btc2eur=bitcoin.btc2eur)
+havelock.printPortfolio(btc2eur=bitcoin.btc2eur, allSymbols=args.show_all)
 bitcoin.printBitcoin()
 
 havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
