@@ -208,6 +208,7 @@ class Transactions:
     def addTransactions(self, transactions):
         for t in transactions:
             self.addTransaction(t, parse=False)
+
         self.sortTransactions()
 
     def sortTransactions(self):
@@ -224,6 +225,20 @@ class Transactions:
                 self.highestHid += 1
         else:
             t = raw
+
+
+        #handle buyback and transferin stuff
+        if t.getType() == "buyback"  and not t.getDetails():
+            if len(self.symbols) != 1:
+                print "calculating fake value for buyback and symbol {:s}".format(t.getSymbol())
+                t.amount = self.getBuyAmount(t.getSymbol())
+                t.details = "mean value calculated by portfolio"
+                qty = t.getQuantity()
+                for ot in self.transactions:
+                    if ot.getType() == "transferin" and ot.getQuantity() == qty:
+                        print "found according transferin for symbol {:s}".format(ot.getSymbol())
+                        ot.amount = t.amount
+                        ot.details = t.getDetails()
 
         self.transactions.append(t)
 
@@ -249,6 +264,7 @@ class Transactions:
 
         if not t.getType() in self.types and not t.getType() is None:
             self.types.append(t.getType())
+
 
         return True
 
