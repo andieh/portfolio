@@ -286,15 +286,19 @@ class Transactions:
         return ret
 
     def getBuy(self, symbol=None):
-        buys = self.getType("buy", symbol)
-        ipos = self.getType("buyipo", symbol)
-        ret = buys + ipos
+        buys       = self.getType("buy", symbol)
+        ipos       = self.getType("buyipo", symbol)
+        transferin = self.getType("transferin", symbol)
+        ret = buys + ipos + transferin
         ret.sort(key=operator.attrgetter('ts'))
         return ret
 
     def getSell(self, symbol=None):
-        sells = self.getType("sell", symbol)
-        return sells
+        sells      = self.getType("sell", symbol)
+        buyback    = self.getType("buyback", symbol)
+        ret = sells + buyback
+        ret.sort(key=operator.attrgetter('ts'))
+        return ret
 
     def getBuyback(self, symbol=None):
         buyback = self.getType("buyback", symbol)
