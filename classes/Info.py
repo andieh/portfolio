@@ -49,6 +49,15 @@ class Info:
             if data is not None:
                 self.data[key] = data
 
+    def getDifficulty(self):
+        return self.data["getdifficulty"]
+
+    def getDifficultyEstimate(self):
+        return self.data["estimate"]
+
+    def getTotalBitcoinCount(self):
+        return self.data["totalbc"]
+
 if __name__ == "__main__":
     b = Info()
 
