@@ -40,6 +40,7 @@ args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
 havelock = Havelock(Config)
+bitcoinInfo = Info()
 
 fn = args.btcde_csv_file
 if os.path.exists(fn) and os.path.isfile(fn):
@@ -53,6 +54,10 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no havelock transaction history found..."
  
+
+# get bitcoin infos
+bitcoinInfo.update()
+
 # update transactions
 havelock.fetchTransactions()
 # get current prices
