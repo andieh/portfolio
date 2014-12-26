@@ -3,6 +3,7 @@ import argparse
 
 from classes import Havelock
 from classes import Bitcoin
+from classes import Info
 
 from config import Config
 from utils import get_console_size

@@ -3,7 +3,7 @@ import time
 import datetime
 import math
 
-class Blockchain:
+class Info:
     def __init__(self):
         self.data = {}
         self.lastDiffChange = 1417734000 #2014-12-05 00:00:00
@@ -50,7 +50,7 @@ class Blockchain:
                 self.data[key] = data
 
 if __name__ == "__main__":
-    b = Blockchain()
+    b = Info()
 
     b.update()
 
