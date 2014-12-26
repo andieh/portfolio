@@ -62,28 +62,41 @@ if args.symbol is not None:
     r = s.getRate()
     rates = []
     timestampsRate = []
+    first = 0
     for rate in r:
         rates.append(rate.getPrice())
         timestampsRate.append(datetime.datetime.fromtimestamp(rate.getTimestamp()))
+        if first == 0:
+            first = rate.getTimestamp()
         
     fig = plot.figure()
     ax = fig.add_subplot(111)
-    ax2 = ax.twinx()
     plot.xticks( rotation=25 )
     xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
     ax.xaxis.set_major_formatter(xfmt)
 
-    ax.plot(timestampsRate, rates, 'k-', label="Rate")
+    ax.plot(timestampsRate, rates, 'ks-', label="Rate")
     ax.legend(loc=1)
 
-    """d = s.getDividend()
+    d = s.getDividend()
     timestampsDividend = []
     dividends = []
+    ax2 = ax.twinx()
     for dividend in d:
-        dividends.append(dividend.getAmount())
-        timestampsDividend.append(datetime.datetime.fromtimestamp(dividend.getTimestamp()))
-    ax2.plot(timestampsDividend, dividends, 'b-', label="Dividend")
-    ax2.legend(loc=2)"""
+        ts = dividend.getTimestamp()
+        if ts < first:
+            continue
+        timestampsDividend.append(datetime.datetime.fromtimestamp(ts))
+        havelock.setEndDate(ts)
+        qt = s.getShareQuantity()
+        div = dividend.getAmount()
+        perShare = div / float(qt)
+        #dividends.append(dividend.getAmount())
+        #print "{:d} shares, dividend {:f}, per Share {:f}".format(qt, div, perShare)
+        dividends.append(perShare)
+        ax2.axvline(x=timestampsDividend[-1], ymin=0, ymax=1)
+    ax2.plot(timestampsDividend, dividends, 'bs-', label="Dividend per Share")
+    ax2.legend(loc=2)
 
 
     plot.show()
