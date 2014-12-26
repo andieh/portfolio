@@ -30,6 +30,9 @@ cp.add_argument("-S", "--start-time", type=str,
         default="2010-01-01",
         help="Time to start from in form %Y-%M-%D")
 
+cp.add_argument("-X", "--symbol", type=str,
+        help="show one single symbol only")
+
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
@@ -46,9 +49,48 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no havelock transaction history found..."
 
-    
-# debug win / loss shit
 
+#debug a single symbol
+if args.symbol is not None:
+    print "analyse symbol {:s}".format(args.symbol)
+
+    s = havelock.portfolio.getSymbol(args.symbol)
+    if s is None:
+        print "failed to get data for that symbol"
+        sys.exit(1)
+
+    r = s.getRate()
+    rates = []
+    timestampsRate = []
+    for rate in r:
+        rates.append(rate.getPrice())
+        timestampsRate.append(datetime.datetime.fromtimestamp(rate.getTimestamp()))
+        
+    fig = plot.figure()
+    ax = fig.add_subplot(111)
+    ax2 = ax.twinx()
+    plot.xticks( rotation=25 )
+    xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+    ax.xaxis.set_major_formatter(xfmt)
+
+    ax.plot(timestampsRate, rates, 'k-', label="Rate")
+    ax.legend(loc=1)
+
+    """d = s.getDividend()
+    timestampsDividend = []
+    dividends = []
+    for dividend in d:
+        dividends.append(dividend.getAmount())
+        timestampsDividend.append(datetime.datetime.fromtimestamp(dividend.getTimestamp()))
+    ax2.plot(timestampsDividend, dividends, 'b-', label="Dividend")
+    ax2.legend(loc=2)"""
+
+
+    plot.show()
+
+    sys.exit(0)
+
+# debug win / loss shit
 # all symbols 
 analyse = havelock.portfolio.getSymbols().keys()
 
