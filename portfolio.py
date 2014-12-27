@@ -1,8 +1,11 @@
 import sys, os
 import argparse
+import math
+import time, datetime
 
 from classes import Havelock
 from classes import Bitcoin
+from classes import Info
 
 from config import Config
 from utils import get_console_size
@@ -39,6 +42,7 @@ args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
 havelock = Havelock(Config)
+bitcoinInfo = Info()
 
 fn = args.btcde_csv_file
 if os.path.exists(fn) and os.path.isfile(fn):
@@ -52,6 +56,10 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no havelock transaction history found..."
  
+
+# get bitcoin infos
+bitcoinInfo.update()
+
 # update transactions
 havelock.fetchTransactions()
 # get current prices
@@ -79,6 +87,30 @@ if args.plain:
     bitcoin.plain()
     print "[Sum]\ninvest:{:0.3f},sumBtc:{:0.3f},sumEur:{:0.3f},profit:{:0.3f}".format(invest, sumBtc, sumEur, sumEur+invest)
     sys.exit(0)
+
+print "Details:"
+console_width = get_console_size()["width"]
+print "-" * console_width
+fmts =   ["d", "s", ".2f"]
+header = ["Next diff change in (d)", "Next diff change at",  
+           "Diff change (%)"]
+colwidth = (console_width / len(header)) - 3
+fill = " | "       
+print fill.join("{:>{}s}".format(h, colwidth) \
+    for f, h in zip(fmts, header))
+
+ndc = bitcoinInfo.getNextDifficultyChangeAt()
+ndcStr = datetime.datetime.fromtimestamp(ndc).strftime('%Y-%m-%d')
+current = int(time.time())
+ndcDays = int(math.ceil((ndc - current) / float(60*60*24)))
+
+
+data = [ndcDays, ndcStr, bitcoinInfo.getNextDifficultyChange()]
+print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
+    for f, d in zip(fmts, data))
+
+
+print "-" * get_console_size()["width"]
 
 # some fancy output
 havelock.printPortfolio(btc2eur=bitcoin.btc2eur, allSymbols=args.show_all)

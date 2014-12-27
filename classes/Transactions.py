@@ -334,7 +334,9 @@ class Transactions:
 
     def getWithdraw(self):
         return self.getType("withdraw")
-
+    
+    def getRate(self):
+        return self.getType("rate")
 
    
     def sumAmount(self, array):

@@ -220,7 +220,7 @@ class Havelock:
         p = self.portfolio
         console_width = get_console_size()["width"]
         
-        print "your portfolio:"
+        print "Your Portfolio:"
         print "-" * console_width
 
 
