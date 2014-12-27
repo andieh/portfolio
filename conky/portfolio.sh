@@ -96,7 +96,7 @@ if [[ "$portfolio_path" = "" ]]; then
 fi
 
 # check if TTL for portfolio dumpfile is reached
-find `dirname $TMPFILE` -name `basename $TMPFILE` -type f -mmin +${ttl_cache} -delete
+find `dirname $TMPFILE` 2>/dev/null -name `basename $TMPFILE` -type f -mmin +${ttl_cache} -delete
 
 # fetch cachefile, if needed
 [ ! -e $TMPFILE ] && fetch

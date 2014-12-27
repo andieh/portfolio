@@ -91,9 +91,9 @@ if args.plain:
 print "Details:"
 console_width = get_console_size()["width"]
 print "-" * console_width
-fmts =   ["d", "s", ".2f"]
-header = ["Next diff change in (d)", "Next diff change at",  
-           "Diff change (%)"]
+fmts =   ["s", "d", ".2f", "g", "g"]
+header = ["Next diff change at", "Next diff change in (d)",  
+           "Diff change (%)", "current Diff", "estimated Diff"]
 colwidth = (console_width / len(header)) - 3
 fill = " | "       
 print fill.join("{:>{}s}".format(h, colwidth) \
@@ -103,12 +103,11 @@ ndc = bitcoinInfo.getNextDifficultyChangeAt()
 ndcStr = datetime.datetime.fromtimestamp(ndc).strftime('%Y-%m-%d')
 current = int(time.time())
 ndcDays = int(math.ceil((ndc - current) / float(60*60*24)))
-
-
-data = [ndcDays, ndcStr, bitcoinInfo.getNextDifficultyChange()]
+currentDiff = bitcoinInfo.getDifficulty()
+estimatedDiff = bitcoinInfo.getDifficultyEstimate()
+data = [ndcStr, ndcDays, bitcoinInfo.getNextDifficultyChange(), currentDiff, estimatedDiff]
 print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
     for f, d in zip(fmts, data))
-
 
 print "-" * get_console_size()["width"]
 
