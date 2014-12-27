@@ -99,7 +99,7 @@ fi
 find `dirname $TMPFILE` 2>/dev/null -name `basename $TMPFILE` -type f -mmin +${ttl_cache} -delete
 
 # fetch cachefile, if needed
-[ ! -e $TMPFILE ] && fetch
+([ ! -e $TMPFILE ] || [[ "$force" = "1" ]]) && fetch
 
 # exit gracefully, if action==fetch
 if [[ "$action" = "fetch" ]]; then 
@@ -107,7 +107,12 @@ if [[ "$action" = "fetch" ]]; then
 fi
 
 # parse dump file - grep correct line 
-data=`grep -A 1 "${action}" $TMPFILE | tail -n 1`
+data=`grep -A 1 "\[${action}\]" $TMPFILE | tail -n 1`
+
+# more debug
+if [[ "$debug" = "1" ]]; then 
+    echo "dataline: $data "
+fi
 
 # verify that line was extracted
 if [[ "$data" = "" ]]; then 
