@@ -45,9 +45,11 @@ class Info:
     def update(self):
         keys = ["getdifficulty", "estimate", "totalbc"]
         for key in keys:
-            data = float(self.fetchData(key))
+            data = self.fetchData(key)
             if data is not None:
-                self.data[key] = data
+                self.data[key] = float(data)
+            else:
+                self.data[key] = -1.0
 
     def getDifficulty(self):
         return self.data["getdifficulty"]
