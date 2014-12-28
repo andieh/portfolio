@@ -26,6 +26,8 @@ class BitcoinTransaction:
         self.qty = 0.0
         self.amount = 0.0
         self.balance = 0.0
+        #not used
+        self.hid = 0
 
     def getSymbol(self):
         return self.symbol

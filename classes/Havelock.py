@@ -181,6 +181,7 @@ class Havelock:
             self.transactions.addTransactions([transaction])
             self.portfolio.addTransactions([transaction], transaction.getSymbol())
             return True
+        
         return False
 
     def printDetails(self, full=True, btc2eur=None):

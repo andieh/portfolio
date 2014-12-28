@@ -20,6 +20,10 @@ class Transaction:
 
     def __eq__(self, other):
         # id should be enough, but transaction export to csv has no id!
+        sameId = (self.getId() == other.getId())
+        if self.getId() != 0:
+            return sameId
+
         sameTs = (int(self.getTimestamp()) == int(other.getTimestamp()))
         sameSymbol = (self.getSymbol() == other.getSymbol())
         sameType = (self.getType() == other.getType())
@@ -29,7 +33,10 @@ class Transaction:
             print "check ts {:d} with {:d}: {:b}".format(int(self.getTimestamp()), int(other.getTimestamp()), sameTs)
             print "check symbol {:s} with {:s}: {:b}".format(self.getSymbol(), other.getSymbol(), sameSymbol)
             print "check {:b}".format((sameTs and sameSymbol))"""
-        return (sameTs and sameSymbol and sameType and sameQuantity)
+        equal = (sameTs and sameSymbol and sameType and sameQuantity)
+        if equal:
+            self.setId(other.getId())
+        return equal
 
     def __lt__(self, other):
         return self.ts < other.ts
@@ -68,39 +75,45 @@ class Transaction:
         if type(raw) == type(""):
             #Date/Time,Type,Quantity,Price,Symbol,Amount,Balance,Details
             r = raw.split(",")
-            if len(r) != 8:
-                #print "wrong size of array"
-                return False
 
             if r[0] == "Date/Time":
                 return False
 
+            if len(r) == 8: # old format
+                offset = 0
+            elif len(r) == 9: # new format with id in front
+                offset = 1
+            else:
+                #print "wrong size of array"
+                return False
+
+
             #2014-09-09 09:10:22
-            self.ts = int(time.mktime(datetime.datetime.strptime(r[0], "%Y-%m-%d %H:%M:%S").timetuple()))
+            self.ts = int(time.mktime(datetime.datetime.strptime(r[offset+0], "%Y-%m-%d %H:%M:%S").timetuple()))
             #print "got time %s" % r[0]
             #print "to ts %d" % self.ts
             #print "revert %s" % datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S')
-            self.type = r[1]
-            if r[2]:
-                self.qty = int(r[2])
+            self.type = r[offset+1]
+            if r[offset+2]:
+                self.qty = int(r[offset+2])
             else:
                 self.qty = 0
-            if r[3]:
-                self.price = float(r[3])
+            if r[offset+3]:
+                self.price = float(r[3+offset])
                 if self.price < 0:
                     self.price *= -1
-            if r[4] != '':
-                self.symbol = r[4]
+            if r[4+offset] != '':
+                self.symbol = r[4+offset]
                 if self.symbol == "None":
                     self.symbol = None
-            if r[5]:
-                self.amount = float(r[5])
+            if r[5+offset]:
+                self.amount = float(r[5+offset])
                 st = self.type
                 if (st == "fee" or st == "buy" or st == "buyipo") and self.amount < 0:
                     self.amount *= -1
-            if r[6]:
-                self.balance = float(r[6])
-            self.details = r[7]
+            if r[6+offset]:
+                self.balance = float(r[offset+6])
+            self.details = r[7+offset]
 
             return True
         else:
@@ -136,8 +149,9 @@ class Transaction:
 
     def __str__(self):
         #Date/Time,Type,Quantity,Price,Symbol,Amount,Balance,details
-        return "%s,%s,%d,%f,%s,%f,%f,%s" %\
-                (datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S'), \
+        return "%d,%s,%s,%d,%f,%s,%f,%f,%s" %\
+                (self.hid,\
+                datetime.datetime.fromtimestamp(self.ts).strftime('%Y-%m-%d %H:%M:%S'), \
                 self.getType(),\
                 self.getQuantity(),\
                 self.getPrice(),\
@@ -220,12 +234,11 @@ class Transactions:
             res = t.parse(raw)
             if not res:
                 return False
-            if t.getId() == 0:
-                t.setId(self.highestHid)
-                self.highestHid += 1
         else:
             t = raw
 
+        if t.getId() > self.highestHid:
+            self.highestHid = t.getId()
 
         #handle buyback and transferin stuff
         if t.getType() == "buyback"  and not t.getDetails():
@@ -264,7 +277,6 @@ class Transactions:
 
         if not t.getType() in self.types and not t.getType() is None:
             self.types.append(t.getType())
-
 
         return True
 
