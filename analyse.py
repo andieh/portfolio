@@ -34,12 +34,13 @@ cp.add_argument("-S", "--start-time", type=str,
 cp.add_argument("-X", "--symbol", type=str,
         help="show one single symbol only")
 
-cp.add_argument("-R", "--rate", type=str,
-        help="show one single rate only")
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
 havelock = Havelock(Config)
+rates = Rates()
+rates.load("rates.prf")
+
 fn = args.btcde_csv_file
 if os.path.exists(fn) and os.path.isfile(fn):
     bitcoin.loadTransactionFile(fn)
@@ -52,19 +53,21 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no havelock transaction history found..."
 
-# debug a single rate
-if args.rate is not None:
-    print "analyse rate for symbol {:s}".format(args.rate)
-    symbol = args.rate
+#debug a single symbol
+if args.symbol is not None:
+    print "analyse symbol {:s}".format(args.symbol)
 
-    rates = Rates()
-    rates.load("rates.prf")
-    if not rates.hasSymbol(symbol):
+    s = havelock.portfolio.getSymbol(args.symbol)
+    #if s is None:
+    #    print "failed to get data for that symbol"
+    #    sys.exit(1)
+
+    if not rates.hasSymbol(args.symbol):
         print "symbol not found in ratefile!"
         sys.exit(1)
 
-    minTs = rates.getMinTimestamp(symbol)
-    maxTs = rates.getMaxTimestamp(symbol)
+    minTs = rates.getMinTimestamp(args.symbol)
+    maxTs = rates.getMaxTimestamp(args.symbol)
     diff = maxTs - minTs
     steps = diff / 50
 
@@ -72,7 +75,7 @@ if args.rate is not None:
     r = []
     for ts in range(minTs, maxTs, steps):
         timestamps.append(datetime.datetime.fromtimestamp(ts))
-        r.append(rates.getRate(symbol, ts))
+        r.append(rates.getRate(args.symbol, ts))
 
     fig = plot.figure()
     ax = fig.add_subplot(111)
@@ -80,40 +83,12 @@ if args.rate is not None:
     xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
     ax.xaxis.set_major_formatter(xfmt)
 
-    ax.plot(timestamps, r, 'ks-', label=symbol)
+    ax.plot(timestamps, r, 'ks-', label="Rate")
     ax.legend(loc=1)
 
-    plot.show()
-
-    sys.exit(0)
-
-#debug a single symbol
-if args.symbol is not None:
-    print "analyse symbol {:s}".format(args.symbol)
-
-    s = havelock.portfolio.getSymbol(args.symbol)
-    if s is None:
-        print "failed to get data for that symbol"
-        sys.exit(1)
-
-    r = s.getRate()
-    rates = []
-    timestampsRate = []
-    first = 0
-    for rate in r:
-        rates.append(rate.getPrice())
-        timestampsRate.append(datetime.datetime.fromtimestamp(rate.getTimestamp()))
-        if first == 0:
-            first = rate.getTimestamp()
-        
-    fig = plot.figure()
-    ax = fig.add_subplot(111)
-    plot.xticks( rotation=25 )
-    xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
-    ax.xaxis.set_major_formatter(xfmt)
-
-    ax.plot(timestampsRate, rates, 'ks-', label="Rate")
-    ax.legend(loc=1)
+    if args.symbol == "BITCOIN":
+        plot.show()
+        sys.exit(0)
 
     d = s.getDividend()
     timestampsDividend = []
@@ -121,8 +96,6 @@ if args.symbol is not None:
     ax2 = ax.twinx()
     for dividend in d:
         ts = dividend.getTimestamp()
-        if ts < first:
-            continue
         timestampsDividend.append(datetime.datetime.fromtimestamp(ts))
         havelock.setEndDate(ts)
         qt = s.getShareQuantity()

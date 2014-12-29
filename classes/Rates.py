@@ -159,7 +159,7 @@ class Rates:
         inserted = 0
         for trans in transactions.transactions:
             t = trans.getType()
-            if t == "rate" or t == "buy" or t == "sell":
+            if t == "buyipo" or t == "rate" or t == "buy" or t == "sell":
                 self.addRate(trans.getSymbol(), trans.getPrice(), trans.getTimestamp())
                 inserted += 1
         print "loaded {:d} rates".format(inserted)
