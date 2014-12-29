@@ -57,9 +57,21 @@ class Rates:
         self.rates[name] = Rate(name)
 
     def getMinTimestamp(self, symbol=None):
+        if symbol is None:
+            ts = []
+            for s in self.rates.keys():
+                ts.append(self.rates[s].getMinTimestamp())
+            return min(ts)
+
         return self.rates[symbol].getMinTimestamp()
 
     def getMaxTimestamp(self, symbol=None):
+        if symbol is None:
+            ts = []
+            for s in self.rates.keys():
+                ts.append(self.rates[s].getMaxTimestamp())
+            return max(ts)
+
         return self.rates[symbol].getMaxTimestamp()
 
     def getRate(self, name, timestamp):
@@ -146,7 +158,8 @@ class Rates:
     def loadTransactions(self, transactions):
         inserted = 0
         for trans in transactions.transactions:
-            if trans.getType() == "rate":
+            t = trans.getType()
+            if t == "rate" or t == "buy" or t == "sell":
                 self.addRate(trans.getSymbol(), trans.getPrice(), trans.getTimestamp())
                 inserted += 1
         print "loaded {:d} rates".format(inserted)
