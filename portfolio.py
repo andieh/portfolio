@@ -86,7 +86,6 @@ if r is None and args.btc2eur is not None:
 # set rates if needed
 rates.addRate("BITCOIN", r)
 for (name, rate) in havelock.currentPrices.items():
-    print rate
     rates.addRate(name, rate)
 
 # store new data back
