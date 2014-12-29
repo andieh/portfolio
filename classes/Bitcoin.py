@@ -177,13 +177,6 @@ class Bitcoin:
             print "failed to fetch bitcoin price"
             print str(e)
 
-        # create transaction with current rate
-        t = BitcoinTransaction()
-        t.type = "Kurs"
-        t.price = self.btc2eur
-        t.details = "added by portfolio"
-        self.transactions.addTransactions([t])
-        
         return self.btc2eur
 
     def loadTransactionFile(self, filename):

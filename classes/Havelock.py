@@ -55,20 +55,11 @@ class Havelock:
 
         portfolio = j["portfolio"]
         ts = time.time()
-        tes = []
         for d in portfolio:
             self.currentPrices[d["symbol"]] = float(d["lastprice"])
             if not __debug__: print "fetched lastprice {} for symbol {}".format(
                     (self.currentPrices[d["symbol"]], d["symbol"]))
-            t = Transaction()
-            t.type = "rate"
-            t.symbol = d["symbol"]
-            t.price = float(d["lastprice"])
-            t.ts = int(ts)
-            tes.append(t)
         self.portfolio.setCurrentPrices(self.currentPrices)
-        self.transactions.addTransactions(tes)
-        self.portfolio.addTransactions(tes)
 
     def fetchBalance(self):
         """ get balance """
@@ -101,9 +92,20 @@ class Havelock:
         raw = f.read()
         f.close()
 
-        for line in raw.split("\n"):
-            self.transactions.addTransaction(line)
+        # first havelock transaction file load is in wrong order
+        lines = raw.split("\n")
+        try:
+            first = lines[1].split(",")[0]
+            first = int(time.mktime(datetime.datetime.strptime(first, "%Y-%m-%d %H:%M:%S").timetuple()))
+            last = lines[-2].split(",")[0]
+            last = int(time.mktime(datetime.datetime.strptime(last, "%Y-%m-%d %H:%M:%S").timetuple()))
+            if first > last:
+                lines.reverse()
+        except:
+            pass
 
+        for line in lines:
+            self.transactions.addTransaction(line)
         self.buildPortfolio()
 
     def buildPortfolio(self):
