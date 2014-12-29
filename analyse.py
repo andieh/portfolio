@@ -69,7 +69,7 @@ if args.symbol is not None:
     minTs = rates.getMinTimestamp(args.symbol)
     maxTs = rates.getMaxTimestamp(args.symbol)
     diff = maxTs - minTs
-    steps = diff / 50
+    steps = diff / 1000
 
     timestamps = []
     r = []

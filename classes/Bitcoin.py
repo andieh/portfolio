@@ -168,7 +168,7 @@ class Bitcoin:
             r = requests.get("https://bitcoinapi.de/v1/%s/rate.json" % self.apiKey)
         except requests.exceptions.ConnectionError:
             print "failed to resolve bitcoinapi.de"
-            return 0.0
+            return None
         try:
             j = json.loads(r.text)
             self.btc2eur = float(j["rate_weighted"])
@@ -176,6 +176,7 @@ class Bitcoin:
         except Exception, e:
             print "failed to fetch bitcoin price"
             print str(e)
+            return None
 
         return self.btc2eur
 

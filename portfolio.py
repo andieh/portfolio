@@ -6,6 +6,7 @@ import time, datetime
 from classes import Havelock
 from classes import Bitcoin
 from classes import Info
+from classes import Rates 
 
 from config import Config
 from utils import get_console_size
@@ -29,6 +30,10 @@ cp.add_argument("--havelock-api-key", type=str,
         default=Config.hl_api_key,
         help="The API key to be used for Havelock")
 
+cp.add_argument("-R", "--rate-file", type=str,
+        default=Config.rate_file,
+        help="File with rate for your symbols")
+
 cp.add_argument("--btc2eur", type=float, default=None,
         help="Force an exchange rate btc-to-eur for calculations")
 
@@ -43,6 +48,7 @@ args = cp.parse_args()
 bitcoin = Bitcoin(Config)
 havelock = Havelock(Config)
 bitcoinInfo = Info()
+rates = Rates()
 
 fn = args.btcde_csv_file
 if os.path.exists(fn) and os.path.isfile(fn):
@@ -56,6 +62,11 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no havelock transaction history found..."
  
+fn = args.rate_file
+if os.path.exists(fn) and os.path.isfile(fn):
+    rates.load(fn)
+else:
+    print "[-] no rate file found..."
 
 # get bitcoin infos
 bitcoinInfo.update()
@@ -68,12 +79,21 @@ havelock.fetchPortfolio()
 havelock.fetchBalance()
 
 # fetch btc.de data, if available
-if bitcoin.fetchData() == 0.0 and args.btc2eur is not None:
+r = bitcoin.fetchData()
+if r is None and args.btc2eur is not None:
     bitcoin.btc2eur = args.btc2eur
+
+# set rates if needed
+rates.addRate("BITCOIN", r)
+for (name, rate) in havelock.currentPrices.items():
+    print rate
+    rates.addRate(name, rate)
 
 # store new data back
 havelock.store(Config.hl_history)
 bitcoin.store(Config.btc_de_history)
+if rates is not None:
+    rates.store(args.rate_file)
 
 havelockBalance = havelock.getBalance()
 bitcoinBalance = bitcoin.getBalance()
