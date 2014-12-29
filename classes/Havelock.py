@@ -147,26 +147,6 @@ class Havelock:
                 ts.append(t)
         self.mergeTransactions(ts)
 
-    def getRateAt(self, symbol, timestamp):
-        lastRate = None
-        lastAct = None
-        for t in self.transactions:
-            if t.getTimestamp() > timestamp:
-                break
-    
-            if t.getSymbol() == symbol:
-                if t.getType() == "rate":
-                    lastRate = t.getPrice()
-                elif t.getType() == "sell" or t.getType() == "buy" or t.getType() == "buyipo":
-                    lastAct = t.getPrice()
-
-        # no rate found, take last one
-        if lastRate is not None:
-            return lastRate
-        elif lastAct is not None:
-            return lastAct
-        return 0.0
-
     def mergeTransactions(self, transactions):
         cnt = 0
         for t in transactions:

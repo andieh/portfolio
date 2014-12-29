@@ -187,7 +187,7 @@ for d in dates:
             reduceBtc = 0.0
 
 
-    btc = bitcoin.getRateAt(d)
+    btc = rates.getRate("BITCOIN", d)
     btcBalance = bitcoin.getBalance()
     btcCount.append(btcBalance+havelock.getBalance(False)+por-reduceBtc)
     invest = bitcoin.getInvest()
