@@ -164,22 +164,11 @@ for d in dates:
         if name not in analyse:
             continue
         amount = sym.getShareQuantity()
-        rate = havelock.getRateAt(name, d)
+        rate = rates.getRate(name, d)
         book = sym.getBookAmount()
         div = sym.getDividendAmount()
         cur = amount * rate
         win = cur - book + div
-
-        """print "  name {:s}: {:d} shares. book {:f}, rate {:f}, value {:f}, dividend {:f}, win {:f}".format(\
-                name, \
-                amount, \
-                book, \
-                rate, \
-                cur, \
-                div,
-                win \
-              )"""
-
         val += win
         por += cur
             
@@ -207,21 +196,8 @@ for d in dates:
     btcX.append(ds)
     btcY.append(btc)
     wins.append(val) #havelock.getBalance(False) + val)
-    """print "  btc count {:f} (btc.de {:f}, havelock {:f}, port {:f}), price {:f}, invest {:f}, btc-win {:f}, total win {:f}".format( \
-            btcCount[-1], \
-            btcBalance, \
-            havelock.getBalance(False), \
-            por, \
-            btc, \
-            invest, \
-            bwin, \
-            val\
-          )"""
     cnt += 1
-
-
 ts = int(time.mktime(datetime.datetime.strptime(args.start_time, "%Y-%m-%d").timetuple())) 
-
 
 fig = plot.figure()
 ax = fig.add_subplot(121)
@@ -265,37 +241,4 @@ ax3.legend(loc=1)
 plot.show()
 
 sys.exit(0)
-
-
-
-cnt = 0
-data2 = []
-for (ts, balance) in data:
-    data2.append((cnt, balance))
-    cnt +=1
-
-data3 = havelock.getData("B.MINE")
-data4 = havelock.getData("AMHASH1")
-data5 = havelock.getData("SCRYPT")
-data6 = havelock.getData("PETA")
-
-
-fig = plot.figure()
-ax = fig.add_subplot(111)
-(xes, yes) = zip(*data3)
-ax.plot(xes, yes, 'b-')
-(xes, yes) = zip(*data4)
-ax.plot(xes, yes, 'r-')
-(xes, yes) = zip(*data5)
-ax.plot(xes, yes, 'k-')
-(xes, yes) = zip(*data6)
-ax.plot(xes, yes, 'y-')
-
-
-#ax.set_xticks(xes)
-#ax.set_xticklabels(xes, rotation=45)
-#fig.autofmt_xdate()
-
-plot.show()
-
 

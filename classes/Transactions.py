@@ -283,7 +283,8 @@ class Transactions:
     def getTimestamps(self):
         tes = []
         for t in self.transactions:
-            tes.append(t.getTimestamp())
+            if t.getType() != "rate":
+                tes.append(t.getTimestamp())
 
         return tes
 

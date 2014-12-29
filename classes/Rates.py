@@ -53,7 +53,7 @@ class Rates:
         return name in self.rates
 
     def addSymbol(self, name):
-        print "add new symbol {:s}".format(name)
+        #print "add new symbol {:s}".format(name)
         self.rates[name] = Rate(name)
 
     def getMinTimestamp(self, symbol=None):
