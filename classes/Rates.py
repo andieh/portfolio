@@ -33,6 +33,12 @@ class Rate:
             # interpolate
             return self.findPreviousRate(timestamp)
 
+    def getMinTimestamp(self):
+        return min(self.rates.keys())
+
+    def getMaxTimestamp(self):
+        return max(self.rates.keys())
+
     def __str__(self):
         c = ""
         for ts in sorted(self.rates.keys()):
@@ -43,9 +49,18 @@ class Rates:
     def __init__(self):
         self.rates = {}
 
+    def hasSymbol(self, name):
+        return name in self.rates
+
     def addSymbol(self, name):
         print "add new symbol {:s}".format(name)
         self.rates[name] = Rate(name)
+
+    def getMinTimestamp(self, symbol=None):
+        return self.rates[symbol].getMinTimestamp()
+
+    def getMaxTimestamp(self, symbol=None):
+        return self.rates[symbol].getMaxTimestamp()
 
     def getRate(self, name, timestamp):
         if name not in self.rates.keys():

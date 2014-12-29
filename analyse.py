@@ -5,6 +5,7 @@ import datetime
 
 from classes import Havelock
 from classes import Bitcoin
+from classes import Rates
 
 from config import Config
 from utils import get_console_size
@@ -33,6 +34,8 @@ cp.add_argument("-S", "--start-time", type=str,
 cp.add_argument("-X", "--symbol", type=str,
         help="show one single symbol only")
 
+cp.add_argument("-R", "--rate", type=str,
+        help="show one single rate only")
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
@@ -49,6 +52,40 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no havelock transaction history found..."
 
+# debug a single rate
+if args.rate is not None:
+    print "analyse rate for symbol {:s}".format(args.rate)
+    symbol = args.rate
+
+    rates = Rates()
+    rates.load("rates.prf")
+    if not rates.hasSymbol(symbol):
+        print "symbol not found in ratefile!"
+        sys.exit(1)
+
+    minTs = rates.getMinTimestamp(symbol)
+    maxTs = rates.getMaxTimestamp(symbol)
+    diff = maxTs - minTs
+    steps = diff / 50
+
+    timestamps = []
+    r = []
+    for ts in range(minTs, maxTs, steps):
+        timestamps.append(datetime.datetime.fromtimestamp(ts))
+        r.append(rates.getRate(symbol, ts))
+
+    fig = plot.figure()
+    ax = fig.add_subplot(111)
+    plot.xticks( rotation=25 )
+    xfmt = md.DateFormatter('%Y-%m-%d %H:%M:%S')
+    ax.xaxis.set_major_formatter(xfmt)
+
+    ax.plot(timestamps, r, 'ks-', label=symbol)
+    ax.legend(loc=1)
+
+    plot.show()
+
+    sys.exit(0)
 
 #debug a single symbol
 if args.symbol is not None:
