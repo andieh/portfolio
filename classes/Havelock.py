@@ -164,6 +164,11 @@ class Havelock:
         for s in self.transactions.getSymbols():
             self.portfolio.addTransactions(self.transactions.getTransactions(symbol=s), s)
 
+    def setStartDate(self, timestamp):
+        self.transactions.setStartDate(timestamp)
+        for s in self.portfolio.getSymbols().values():
+            s.setStartDate(timestamp)
+
     def setEndDate(self, timestamp):
         self.transactions.setEndDate(timestamp)
         for s in self.portfolio.getSymbols().values():

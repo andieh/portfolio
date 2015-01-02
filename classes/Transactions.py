@@ -170,6 +170,10 @@ class Transactions:
         self.minTimestamp = 1*10e10
         self.maxTimestamp = -1
         self.endDate = None
+        self.startDate = 0
+
+    def setStartDate(self, startDate):
+        self.startDate = startDate
 
     def setEndDate(self, endDate):
         self.endDate = endDate
@@ -308,7 +312,8 @@ class Transactions:
             for r in ret:
                 if r.getTimestamp() > self.endDate:
                     break
-                ret2.append(r)
+                if r.getTimestamp() > self.startDate:
+                    ret2.append(r)
             return ret2
 
 
