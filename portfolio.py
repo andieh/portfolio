@@ -47,6 +47,7 @@ args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
 havelock = Havelock(Config)
+
 bitcoinInfo = Info()
 rates = Rates()
 
@@ -94,6 +95,8 @@ bitcoin.store(Config.btc_de_history)
 if rates is not None:
     rates.store(args.rate_file)
 
+#havelock.setStartDate(time.time()-(60*60*24))
+#havelock.setEndDate(time.time())
 havelockBalance = havelock.getBalance()
 bitcoinBalance = bitcoin.getBalance()
 sumBtc = bitcoinBalance + havelockBalance

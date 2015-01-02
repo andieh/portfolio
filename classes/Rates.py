@@ -42,7 +42,11 @@ class Rate:
     def __str__(self):
         c = ""
         for ts in sorted(self.rates.keys()):
-            c += "{:s},{:d},{:f}\n".format(self.name, ts, self.rates[ts])
+            try:
+                c += "{:s},{:d},{:f}\n".format(self.name, ts, self.rates[ts])
+            except:
+                print "uuu wrong format"
+
         return c
 
 class Rates:

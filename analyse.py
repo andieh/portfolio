@@ -27,6 +27,10 @@ cp.add_argument("-H", "--havelock-csv-file", type=str,
         default=Config.hl_history,
         help="Havelock transaction log / history")
 
+cp.add_argument("-R", "--rate-file", type=str,
+        default=Config.rate_file,
+        help="File with rate for your symbols")
+
 cp.add_argument("-S", "--start-time", type=str,
         default="2010-01-01",
         help="Time to start from in form %Y-%M-%D")
@@ -39,7 +43,7 @@ args = cp.parse_args()
 bitcoin = Bitcoin(Config)
 havelock = Havelock(Config)
 rates = Rates()
-rates.load("rates.prf")
+rates.load(args.rate_file)
 
 fn = args.btcde_csv_file
 if os.path.exists(fn) and os.path.isfile(fn):
@@ -69,7 +73,7 @@ if args.symbol is not None:
     minTs = rates.getMinTimestamp(args.symbol)
     maxTs = rates.getMaxTimestamp(args.symbol)
     diff = maxTs - minTs
-    steps = diff / 1000
+    steps = diff / 200
 
     timestamps = []
     r = []
