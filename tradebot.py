@@ -31,8 +31,15 @@ myorders = dict((d["id"], d) for d in orders)
 print "cash: {} - shares: {} - open orders: {}".format(
         cash, shares, len(myorders))
 
-MIN_AMOUNT = 7
-MAX_AMOUNT = 250
+MIN_MAX_AMOUNT = (7, 250)
+MIN_MAX_SLEEP = (4, 15)
+
+wallet = {"cash": 0.50000, "shares": 1000, 
+          "sold": 0.00000, "bought": 0.00000,
+          "buy" : 0.00000, "sell"  : 0.00000,
+          "fee" : 0.00000 }
+
+current_orders = []
 
 while True:
     myorders = dict((d["id"], d) for d in hl.fetchOrders())
@@ -58,32 +65,33 @@ while True:
     fee = top_ask["price"] * 0.004
 
     if spread < fee:
-        print "##### SPREAD TO SMALL!!!!"
+        print "##### SPREAD TO SMALL - waiting some seconds"
+        time.sleep(random.randint(*MIN_MAX_SLEEP))
         continue
 
     myids = [int(x[0]) for x in myorders.items()]
     
     # check if top in bid:
     if top_bid["id"] not in myids:
-        amount = random.randint(MIN_AMOUNT, MAX_AMOUNT)
+        amount = random.randint(*MIN_MAX_AMOUNT)
         print "##### BID ACTION -- delete old -- create new #####"
         for o_id, o in myorders.items():
             if o["type"] == "bid" and o["symbol"] == sym:
                 hl.cancelOrder(o_id)
         hl.createOrder(sym, "buy", top_bid["price"]+1e-8, amount)
-    else:
-        print "##### NO BID ACTION #####"
+    #else:
+    #    print "##### NO BID ACTION #####"
 
     
     if top_ask["id"] not in myids:
-        amount = random.randint(MIN_AMOUNT, MAX_AMOUNT)
+        amount = random.randint(*MIN_MAX_AMOUNT)
         print "##### ASK ACTION -- delete old -- create new #####"
         for o_id, o in myorders.items():
             if o["type"] == "ask" and o["symbol"] == sym:
                 hl.cancelOrder(o_id)
         hl.createOrder(sym, "sell", top_ask["price"]-1e-8, amount)
-    else:
-        print "##### NO ASK ACTION #####"
+    #else:
+    #    print "##### NO ASK ACTION #####"
 
     print "top ask: {} bid: {} spread: {} fee: {}".format(top_ask["price"], top_bid["price"], spread, fee)
     
