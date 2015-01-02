@@ -20,14 +20,36 @@ class Havelock:
         self.havelockBalance = None
         self.havelockBalanceAvailable = None
 
-    def fetchData(self, dataType):
-        payload = {'key': self.apiKey}
+    def fetchData(self, dataType, post=None):
+        payload = {}
+
+        # use post to update the payload
+        if post is not None:
+            assert isinstance(post, dict), "'post' arg must be an dict"
+            payload.update(post)
+
+        url = "https://www.havelockinvestments.com/r/{:s}".format(dataType)
+
         if dataType == "portfolio" or "balance":
-            url = "https://www.havelockinvestments.com/r/{:s}".format(dataType)
+            payload["key"] = self.apiKey
+            
+        elif dataType.startswith("orderbook"):
+            assert "symbol" in post
+
+        elif dataType == "ordercreate":
+            payload['key'] = self.apiKey
+
+        elif dataType == "ordercancel":
+            payload['key'] = self.apiKey
+
+        elif dataType == "orders":
+            payload['key'] = self.apiKey
+
         elif dataType == "transactions":
-            url = "https://www.havelockinvestments.com/r/{:s}".format(dataType)
+            payload['key'] = self.apiKey
             payload["limit"] = 300
             # add sinceid to payload
+
         else:
             print "data Type not known!" 
             return None
@@ -35,8 +57,10 @@ class Havelock:
         try:
             r = requests.post(url, data=payload)
             j = json.loads(r.text)
+            if j["status"] == "error":
+                print "Havelock - API error message: ", j["message"]
             if j["status"] != "ok":
-                print "failed to fetch Havelock Portfolio!"
+                print "failed to fetch data ({})".format(dataType)
                 return None
 
         except requests.exceptions.ConnectionError:
@@ -48,7 +72,35 @@ class Havelock:
 
         return j
 
+    def fetchOrderbook(self, symbol, full=False):
+        """ get orderbook """
+        dtype = "orderbookfull" if full else "orderbook"
+        j = self.fetchData(dtype, {"symbol": symbol})
+        if j is None: 
+            return None 
+
+        return j["asks"], j["bids"]
+
+    def fetchOrders(self):
+        """ fetch open orders """ 
+        j = self.fetchData("orders")
+        return j["orders"]
+
+    def createOrder(self, symbol, action, price, units):
+        """ create new order """ 
+        assert action in ["buy", "sell"]
+        d = {"symbol": symbol, "action": action, "price": price, "units": units}
+        j = self.fetchData("ordercreate", d)
+        return j
+
+    def cancelOrder(self, order_id):
+        """ cancel order """ 
+        d = {"id": order_id}
+        j = self.fetchData("ordercancel", d)
+        return j["status"]
+
     def fetchPortfolio(self):
+        """ get portfolio """
         j = self.fetchData("portfolio")
         if j is None:
             return None
