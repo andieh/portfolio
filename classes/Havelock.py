@@ -97,7 +97,7 @@ class Havelock:
         """ cancel order """ 
         d = {"id": order_id}
         j = self.fetchData("ordercancel", d)
-        return j["status"]
+        return j is not None
 
     def fetchPortfolio(self):
         """ get portfolio """
