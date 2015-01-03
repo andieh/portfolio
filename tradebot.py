@@ -93,7 +93,7 @@ while True:
     #else:
     #    print "##### NO ASK ACTION #####"
 
-    print "top ask: {} bid: {} spread: {} fee: {}".format(top_ask["price"], top_bid["price"], spread, fee)
+    #print "top ask: {} bid: {} spread: {} fee: {}".format(top_ask["price"], top_bid["price"], spread, fee)
     
     time.sleep(4)
 
