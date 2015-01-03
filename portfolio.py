@@ -43,6 +43,9 @@ cp.add_argument("-p", "--plain", action="store_true",
 cp.add_argument("-s", "--show-all", action="store_true",
         help="show all symbols in your portfolio", default=False)
 
+cp.add_argument("-S", "--secs-history", 
+        help="ignore all transactions older than seconds", default=None)
+
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
@@ -95,8 +98,12 @@ bitcoin.store(Config.btc_de_history)
 if rates is not None:
     rates.store(args.rate_file)
 
-#havelock.setStartDate(time.time()-(60*60*24))
-#havelock.setEndDate(time.time())
+# handle only transactions starting from now back for 'args.secs_history' seconds
+if args.secs_history is not None:
+    havelock.setStartDate(time.time()-(int(args.secs_history)))
+    havelock.setEndDate(time.time())
+
+
 havelockBalance = havelock.getBalance()
 bitcoinBalance = bitcoin.getBalance()
 sumBtc = bitcoinBalance + havelockBalance
