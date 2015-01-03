@@ -31,7 +31,7 @@ myorders = dict((d["id"], d) for d in orders)
 print "cash: {} - shares: {} - open orders: {}".format(
         cash, shares, len(myorders))
 
-MIN_MAX_AMOUNT = (7, 250)
+MIN_MAX_AMOUNT = (1, 350)
 MIN_MAX_SLEEP = (4, 15)
 
 wallet = {"cash": 0.50000, "shares": 1000, 
@@ -78,7 +78,10 @@ while True:
         for o_id, o in myorders.items():
             if o["type"] == "bid" and o["symbol"] == sym:
                 hl.cancelOrder(o_id)
-        hl.createOrder(sym, "buy", top_bid["price"]+1e-8, amount)
+        if cash < (top_bid["price"]+1e-8)*amount:
+            print "NOT ENOUGH CASH to buy: {} at {}".format(amount, top_bid["price"])
+        else:
+            hl.createOrder(sym, "buy", top_bid["price"]+1e-8, amount)
     #else:
     #    print "##### NO BID ACTION #####"
 
@@ -93,8 +96,8 @@ while True:
     #else:
     #    print "##### NO ASK ACTION #####"
 
-    #print "top ask: {} bid: {} spread: {} fee: {}".format(top_ask["price"], top_bid["price"], spread, fee)
+    print "top ask: {} bid: {} spread: {} fee: {}".format(top_ask["price"], top_bid["price"], spread, fee)
     
-    time.sleep(4)
+    time.sleep(random.randint(*MIN_MAX_SLEEP))
 
 
