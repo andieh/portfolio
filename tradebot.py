@@ -41,6 +41,8 @@ wallet = {"cash": 0.50000, "shares": 1000,
 
 current_orders = []
 
+overview = 10
+
 while True:
     myorders = dict((d["id"], d) for d in hl.fetchOrders())
     asks, bids = hl.fetchOrderbook(sym, full=True)
@@ -58,8 +60,10 @@ while True:
 
     # buying shares for price
     top_bid = bids[0]
+    second_bid = bids[1]
     # selling shares for price
     top_ask = asks[0]
+    second_ask = asks[1]
     # spread
     spread = top_ask["price"] - top_bid["price"]
     fee = top_ask["price"] * 0.004
@@ -70,7 +74,15 @@ while True:
         continue
 
     myids = [int(x[0]) for x in myorders.items()]
-    
+ 
+
+    # check range to second 
+    if top_bid["id"] in myids and second_bid["price"] < top_bid["price"]-1e-8:
+        hl.cancelOrder(top_bid["id"])
+    if top_ask["id"] in myids and second_ask["price"] > top_ask["price"]+1e-8:
+        hl.cancelOrder(top_ask["id"])
+
+
     # check if top in bid:
     if top_bid["id"] not in myids:
         amount = random.randint(*MIN_MAX_AMOUNT)
@@ -95,9 +107,44 @@ while True:
         hl.createOrder(sym, "sell", top_ask["price"]-1e-8, amount)
     #else:
     #    print "##### NO ASK ACTION #####"
-
-    print "top ask: {} bid: {} spread: {} fee: {}".format(top_ask["price"], top_bid["price"], spread, fee)
     
+    print "ask: {} bid: {} spread: {} ({:.3f}%) fee: {}".format(top_ask["price"], top_bid["price"],spread, spread/top_ask["price"]*100, fee)
+
+
+    p = hl.portfolio
+    t = p.symbols[sym]
+    if overview <= 0:
+        overview = 100
+        hl.fetchTransactions()
+        hl.fetchPortfolio()
+        hl.fetchBalance()
+
+        # (timezone -6h) + 24 hours
+        since = 60*60*6 + 60*60*24
+
+        hl.setStartDate(time.time()-(int(since)))
+        hl.setEndDate(time.time())
+        print "------> overview (24h) share balance: {} btc balance: {}".format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
+        overview -= 1
+
+    elif overview % 10 == 0:
+        hl.fetchTransactions()
+        hl.fetchPortfolio()
+        hl.fetchBalance()
+
+        # (timezone -6h) + 2 hours
+        since = 60*60*6 + 60*60*2
+
+        hl.setStartDate(time.time()-(int(since)))
+        hl.setEndDate(time.time())
+        print "------> overview (2h) share balance: {} btc balance: {}".format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
+        overview -= 1
+    else:
+        overview -= 1
+
+
+
+
     time.sleep(random.randint(*MIN_MAX_SLEEP))
 
 
