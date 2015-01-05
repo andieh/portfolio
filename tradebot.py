@@ -31,7 +31,7 @@ myorders = dict((d["id"], d) for d in orders)
 print "cash: {} - shares: {} - open orders: {}".format(
         cash, shares, len(myorders))
 
-MIN_MAX_AMOUNT = (1, 350)
+MIN_MAX_AMOUNT = (200, 550)
 MIN_MAX_SLEEP = (4, 15)
 
 wallet = {"cash": 0.50000, "shares": 1000, 
@@ -68,48 +68,55 @@ while True:
     spread = top_ask["price"] - top_bid["price"]
     fee = top_ask["price"] * 0.004
 
+    notrade = False
     if spread < fee:
         print "##### SPREAD TO SMALL - waiting some seconds"
         time.sleep(random.randint(*MIN_MAX_SLEEP))
-        continue
+        notrade = True
+
+    if spread/top_ask["price"] < 0.03:
+        print "##### SPREAD under 3% - wait..."
+        time.sleep(random.randint(*MIN_MAX_SLEEP))
+        notrade = True
 
     myids = [int(x[0]) for x in myorders.items()]
  
-
     # check range to second 
     if top_bid["id"] in myids and second_bid["price"] < top_bid["price"]-1e-8:
+        print "-> too much diff in bid - canceling"
         hl.cancelOrder(top_bid["id"])
     if top_ask["id"] in myids and second_ask["price"] > top_ask["price"]+1e-8:
+        print "-> too much diff in ask - canceling"
         hl.cancelOrder(top_ask["id"])
 
-
-    # check if top in bid:
-    if top_bid["id"] not in myids:
-        amount = random.randint(*MIN_MAX_AMOUNT)
-        print "##### BID ACTION -- delete old -- create new #####"
-        for o_id, o in myorders.items():
-            if o["type"] == "bid" and o["symbol"] == sym:
-                hl.cancelOrder(o_id)
-        if cash < (top_bid["price"]+1e-8)*amount:
-            print "NOT ENOUGH CASH to buy: {} at {}".format(amount, top_bid["price"])
-        else:
-            hl.createOrder(sym, "buy", top_bid["price"]+1e-8, amount)
-    #else:
-    #    print "##### NO BID ACTION #####"
-
+    if not notrade:
+        # check if top in bid:
+        if top_bid["id"] not in myids:
+            amount = random.randint(*MIN_MAX_AMOUNT)
+            print "##### BID ACTION -- delete old -- create new #####"
+            for o_id, o in myorders.items():
+                if o["type"] == "bid" and o["symbol"] == sym:
+                    hl.cancelOrder(o_id)
+            if cash < (top_bid["price"]+1e-8)*amount:
+                print "NOT ENOUGH CASH to buy: {} at {}".format(amount, top_bid["price"])
+            else:
+                hl.createOrder(sym, "buy", top_bid["price"]+1e-8, amount)
+        
+        # check if top in ask:
+        if top_ask["id"] not in myids:
+            amount = random.randint(*MIN_MAX_AMOUNT)
+            print "##### ASK ACTION -- delete old -- create new #####"
+            for o_id, o in myorders.items():
+                if o["type"] == "ask" and o["symbol"] == sym:
+                    hl.cancelOrder(o_id)
+            hl.createOrder(sym, "sell", top_ask["price"]-1e-8, amount)
     
-    if top_ask["id"] not in myids:
-        amount = random.randint(*MIN_MAX_AMOUNT)
-        print "##### ASK ACTION -- delete old -- create new #####"
-        for o_id, o in myorders.items():
-            if o["type"] == "ask" and o["symbol"] == sym:
-                hl.cancelOrder(o_id)
-        hl.createOrder(sym, "sell", top_ask["price"]-1e-8, amount)
-    #else:
-    #    print "##### NO ASK ACTION #####"
-    
-    print "ask: {} bid: {} spread: {} ({:.3f}%) fee: {}".format(top_ask["price"], top_bid["price"],spread, spread/top_ask["price"]*100, fee)
-
+    print "-"*60
+    print "SPREAD: {} ({:.3f}%) FEE: {}".format(spread, spread/top_ask["price"]*100, fee)
+    for b, a in zip(bids[:10], asks[:10]):
+        print "{:>7} - {:>12.8f} {}|{:>7} - {:>12.8f} {}". \
+                format(b["amount"], b["price"], "<-" if b["id"] in myids else "  ",
+                       a["amount"], a["price"], "<-" if a["id"] in myids else "  ")
 
     p = hl.portfolio
     t = p.symbols[sym]
@@ -118,26 +125,43 @@ while True:
         hl.fetchTransactions()
         hl.fetchPortfolio()
         hl.fetchBalance()
+        hl.store(Config.hl_history)
+        cash = hl.havelockBalanceAvailable 
 
         # (timezone -6h) + 24 hours
         since = 60*60*6 + 60*60*24
 
         hl.setStartDate(time.time()-(int(since)))
         hl.setEndDate(time.time())
-        print "------> overview (24h) share balance: {} btc balance: {}".format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
+        print "------> overview (24h) share balance: {} btc balance: {}". \
+                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
         overview -= 1
 
     elif overview % 10 == 0:
         hl.fetchTransactions()
         hl.fetchPortfolio()
         hl.fetchBalance()
+        hl.store(Config.hl_history)
 
         # (timezone -6h) + 2 hours
         since = 60*60*6 + 60*60*2
 
         hl.setStartDate(time.time()-(int(since)))
         hl.setEndDate(time.time())
-        print "------> overview (2h) share balance: {} btc balance: {}".format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
+        print "------> overview (2h) share balance: {:>8} btc balance: {:>12.8f}". \
+                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
+        if p.getCurrentWin(sym)-t.getDividendAmount() < -0.025:
+            print "loosing toooooo much, emergency exit"
+            sys.exit()
+
+        hl.setStartDate(time.time()-(int(since)*2))
+        hl.setEndDate(time.time())
+        print "------> overview (4h) share balance: {:>8} btc balance: {:>12.8f}". \
+                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
+        hl.setStartDate(time.time()-(int(since)*4))
+        hl.setEndDate(time.time())
+        print "------> overview (8h) share balance: {:>8} btc balance: {:>12.8f}". \
+                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
         overview -= 1
     else:
         overview -= 1
