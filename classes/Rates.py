@@ -81,7 +81,7 @@ class Rates:
     def getRate(self, name, timestamp):
         if name not in self.rates.keys():
             print "no values for symbol {:s}".format(name)
-            return None
+            return 0.0
         return self.rates[name].getRate(timestamp)
 
     def addRate(self, name, rate, timestamp=None):
