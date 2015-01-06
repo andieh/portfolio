@@ -13,6 +13,21 @@ from config import Config
 from utils import get_console_size
 
 
+
+def show_balance(havelock_obj, symbol, hours_back):
+     # (timezone -6h) + X hours
+    since = 60*60*6 + 60*60*hours_back
+
+    p = havelock_obj.portfolio
+    t = p.symbols[symbol]
+    havelock_obj.setStartDate(time.time()-(int(since)))
+    havelock_obj.setEndDate(time.time())
+    balance = p.getCurrentWin(symbol)-t.getDividendAmount()
+    print "------> overview ({:>2}h) share balance: {:>8} btc balance: {:>12.8f}". \
+        format(hours_back, t.getShareQuantity(), balance)
+
+    return balance
+
 hl = Havelock(Config)
 
 sym = "AMHASH1"
@@ -128,13 +143,6 @@ while True:
         hl.store(Config.hl_history)
         cash = hl.havelockBalanceAvailable 
 
-        # (timezone -6h) + 24 hours
-        since = 60*60*6 + 60*60*24
-
-        hl.setStartDate(time.time()-(int(since)))
-        hl.setEndDate(time.time())
-        print "------> overview (24h) share balance: {} btc balance: {}". \
-                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
         overview -= 1
 
     elif overview % 10 == 0:
@@ -142,31 +150,21 @@ while True:
         hl.fetchPortfolio()
         hl.fetchBalance()
         hl.store(Config.hl_history)
+        cash = hl.havelockBalanceAvailable 
 
-        # (timezone -6h) + 2 hours
-        since = 60*60*6 + 60*60*2
+        show_balance(hl, sym, 1)
+        show_balance(hl, sym, 2)
+        show_balance(hl, sym, 4)
+        show_balance(hl, sym, 8)
+        show_balance(hl, sym, 12)
+        show_balance(hl, sym, 24)
+        show_balance(hl, sym, 36)
+        show_balance(hl, sym, 48)
 
-        hl.setStartDate(time.time()-(int(since)))
-        hl.setEndDate(time.time())
-        print "------> overview (2h) share balance: {:>8} btc balance: {:>12.8f}". \
-                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
-        if p.getCurrentWin(sym)-t.getDividendAmount() < -0.025:
-            print "loosing toooooo much, emergency exit"
-            sys.exit()
 
-        hl.setStartDate(time.time()-(int(since)*2))
-        hl.setEndDate(time.time())
-        print "------> overview (4h) share balance: {:>8} btc balance: {:>12.8f}". \
-                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
-        hl.setStartDate(time.time()-(int(since)*4))
-        hl.setEndDate(time.time())
-        print "------> overview (8h) share balance: {:>8} btc balance: {:>12.8f}". \
-                format(t.getShareQuantity(), p.getCurrentWin(sym)-t.getDividendAmount())
         overview -= 1
     else:
         overview -= 1
-
-
 
 
     time.sleep(random.randint(*MIN_MAX_SLEEP))
