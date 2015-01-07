@@ -133,7 +133,7 @@ while 1:
                 second_sell = asks[1]
                 diff = second_sell["price"] - top_sell["price"]
                 print "order active and lowest one, check diff {:g}".format(diff)
-                if diff > 1e-8:
+                if diff > 2e-8:
                     print "diff is bigger, cancel sell"
                     hl.cancelOrder(top_sell["id"])
                     np = second_sell["price"] - 1e-8
