@@ -84,6 +84,8 @@ class Havelock:
     def fetchOrders(self):
         """ fetch open orders """ 
         j = self.fetchData("orders")
+        if j is None:
+            return None
         return j["orders"]
 
     def createOrder(self, symbol, action, price, units):

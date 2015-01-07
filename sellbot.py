@@ -20,8 +20,12 @@ def show_options():
     print "(q)uit"
     print "(r)efresh"
 
+if len(sys.argv) < 2:
+    print "please support symbol to sell"
+    sys.exit(0)
+
 hl = Havelock(Config)
-sym = "AMHASH1"
+sym = sys.argv[1]
 hl.portfolio.addSymbol(sym)
 hl.loadTransactionFile(Config.hl_history)
 
@@ -29,11 +33,28 @@ auto_sell = None
 
 while 1:
     orders = hl.fetchOrders()
+    if orders is None:
+        time.sleep(5)
+        continue
+
     hl.fetchBalance()
     cash = hl.havelockBalanceAvailable 
+    if cash is None:
+        time.sleep(5)
+        continue
+
     shares = hl.portfolio.getSymbol(sym).getShareQuantity()
+    if shares is None:
+        time.sleep(5)
+        continue
+
     myorders = dict((int(d["id"]), d) for d in orders)
-    (asks, bids)= hl.fetchOrderbook(sym, full=True)
+    r = hl.fetchOrderbook(sym, full=True)
+    if r is None:
+        time.sleep(5)
+        continue
+    (asks, bids) = r
+
     asks = [{"price": float(d["price"]), 
              "amount": int(d["amount"]), 
              "id": int(d["id"])} for d in asks.values()]
@@ -64,7 +85,7 @@ while 1:
 
     if auto_sell is not None:
         print "AUTOSELL ACTIVE!"
-        (ids, amount, price, step) = auto_sell
+        (ids, amount, price, step, current) = auto_sell
         print auto_sell
         print "try to sell {} shares for a minimum price of {} BTC / share".format(amount, price)
         top_sell = asks[0]
@@ -73,20 +94,40 @@ while 1:
             if top_sell["price"] < price:
                 # smallest price is lower than my minimum, create single order
                 print "create single order"
-                sid = hl.createOrder(sym, "sell", price, amount)
-                auto_sell = ([sid["id"]], amount, price, step)
+                qty = min(amount, step)
+                sid = hl.createOrder(sym, "sell", price, qty)
+                auto_sell = ([sid["id"]], amount, price, step, qty)
                 continue
             else:
+                print "create the cheapest order!" 
                 np = top_sell["price"] - 1e-8
-                sid = hl.createOrder(sym, "sell", np, amount)
-                auto_sell = ([sid["id"]], amount, price, step)
+                qty = min(amount, step)
+                sid = hl.createOrder(sym, "sell", np, qty)
+                auto_sell = ([sid["id"]], amount, price, step, qty)
                 continue
         else: 
             sid = ids[0] 
             if not sid in ask_ids:
-                print "all shares sold, finish auto sell"
-                auto_sell = None
-                continue
+                bal = amount - current
+                if bal <= 0:
+                    print "all shares sold, finish auto sell"
+                    auto_sell = None
+                    continue
+                else:
+                    print "start from beginning"
+                    auto_sell = ([], bal, price, step, 0)
+                    continue
+            else:
+                # update current and amount
+                order = myorders[sid]
+                remain = int(order["remaining"])
+                print "checking current amount"
+                if remain != current:
+                    diff = current - remain
+                    amount -= diff
+                    current = remain
+                    auto_sell = ([sid["id"]], amount, price, step, current)
+                    print auto_sell
 
             if top_sell["id"] == sid:
                 print "order active and lowest one, sleeping"
@@ -102,8 +143,9 @@ while 1:
                     print "go cheaper!"
                     hl.cancelOrder(sid)
                     np = top_sell["price"] - 1e-8
-                    sid = hl.createOrder(sym, "sell", np, amount)
-                    auto_sell = ([sid["id"]], amount, price, step)
+                    qty = min(amount, step)
+                    sid = hl.createOrder(sym, "sell", np, qty)
+                    auto_sell = ([sid["id"]], amount, price, step, qty)
                     continue
 
     while 1:
@@ -120,8 +162,11 @@ while 1:
         elif ri == "c":
             print "your asks:"
             for o_id, o in myorders.items():
+                if o["symbol"] != sym:
+                    continue
                 print "({}): {} shares @ {}".format(o_id, o["remaining"], o["price"])
             idx = raw_input("select id: ")
+            print idx
             if not idx:
                 break
             hl.cancelOrder(idx)
@@ -142,7 +187,7 @@ while 1:
             step = int(raw_input("maximum number for one sell order: "))
             answer = raw_input("is it ok to sell {} shares for a total of {} BTC? (y/n)".format(amount, (price*amount)))
             if answer == "y":
-                auto_sell = ([], amount, price, step)
+                auto_sell = ([], amount, price, step, 0)
             else:
                 auto_sell = None
             break;
