@@ -67,7 +67,7 @@ while 1:
     bids.sort(reverse=True, key=lambda o: o["price"])
     ask_ids = [x["id"] for x in asks]
     print "market:"
-    print "   {:41s}||   {:38s}".format("asks", "bids")
+    print "   {:41s} ||   {:38s}".format("asks", "bids")
     for i in range(10):
         ap = asks[i]["price"]
         aa = asks[i]["amount"]
@@ -77,7 +77,7 @@ while 1:
         ba = bids[i]["amount"]
         bv = ba*bp
         bmark = "*" if bids[i]["id"] in myorders.keys() else " "
-        print "{}{:10f} BTC | # {:<6d} | {:10f} BTC ||{}{:10f} BTC | # {:<6d} | {:10f} BTC".format(
+        print "{} {:<010g} BTC | # {:<6d} | {:<010g} BTC ||{} {:<010g} BTC | # {:<6d} | {:<010g} BTC".format(
                 amark,
                 ap, aa, av, 
                 bmark,
@@ -87,7 +87,7 @@ while 1:
         print "AUTOSELL ACTIVE!"
         (ids, amount, price, step, current) = auto_sell
         print auto_sell
-        print "try to sell {} shares for a minimum price of {} BTC / share".format(amount, price)
+        print "try to sell {:g} shares for a minimum price of {:g} BTC / share".format(amount, price)
         top_sell = asks[0]
         if len(ids) == 0:
             # place bid (\TODO: step
@@ -126,11 +126,22 @@ while 1:
                     diff = current - remain
                     amount -= diff
                     current = remain
-                    auto_sell = ([sid["id"]], amount, price, step, current)
+                    auto_sell = ([sid], amount, price, step, current)
                     print auto_sell
 
             if top_sell["id"] == sid:
-                print "order active and lowest one, sleeping"
+                second_sell = asks[1]
+                diff = second_sell["price"] - top_sell["price"]
+                print "order active and lowest one, check diff {:g}".format(diff)
+                if diff > 1e-8:
+                    print "diff is bigger, cancel sell"
+                    hl.cancelOrder(top_sell["id"])
+                    np = second_sell["price"] - 1e-8
+                    qty = min(amount, step)
+                    sid = hl.createOrder(sym, "sell", np, qty)
+                    auto_sell = ([sid["id"]], amount, price, step, qty)
+                    continue
+
                 time.sleep(10)
                 continue
             else:
