@@ -30,7 +30,7 @@ def show_balance(havelock_obj, symbol, hours_back):
 
 hl = Havelock(Config)
 
-sym = "AMHASH1"
+sym = "PETA"
 
 orders = hl.fetchOrders()
 hl.fetchBalance()
@@ -49,7 +49,7 @@ print "cash: {} - shares: {} - open orders: {}".format(
 MIN_MAX_AMOUNT = (200, 550)
 MIN_MAX_SLEEP = (4, 15)
 
-wallet = {"cash": 0.50000, "shares": 1000, 
+wallet = {"cash": 0.10000, "shares": 100, 
           "sold": 0.00000, "bought": 0.00000,
           "buy" : 0.00000, "sell"  : 0.00000,
           "fee" : 0.00000 }

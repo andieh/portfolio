@@ -4,6 +4,12 @@ import json
 
 from Transactions import *
 from Portfolio import *
+import time
+
+# set maximum api rate
+# this is limited by havelock
+# calls / 600
+MAX_API_RATE_CALLS = 300
 
 try:
     from utils import get_console_size
@@ -19,6 +25,34 @@ class Havelock:
         self.portfolio = Portfolio(self.conf.epsilon)
         self.havelockBalance = None
         self.havelockBalanceAvailable = None
+        self.apiRate = [] # calls in the last 600 s
+
+    def checkApiRate(self):
+        self.apiRate.append(time.time())
+        self.apiRate = [x for x in self.apiRate if x > (time.time() - 600)]
+        if len(self.apiRate) < 2:
+            return
+
+        diff = self.apiRate[-1] - self.apiRate[0]
+        current = diff / 600.0
+        ok = MAX_API_RATE_CALLS / 600.0
+
+        warn = 0.8 * ok
+        slow = 0.9 * ok
+        wait = 0.99 * ok
+        sl = None
+        if current > warn:
+            sl = ok
+
+        if current > slow: 
+            sl = 5*ok
+
+        if current > wait:
+            sl = 600 - diff
+
+        if sl is not None:
+            time.sleep(sl)
+            print "{} api calls in the last 600s (rate: {} == OK), current rate {}, sleeped {}".format(len(self.apiRate), ok, current, sl)
 
     def fetchData(self, dataType, post=None):
         payload = {}
@@ -55,6 +89,8 @@ class Havelock:
             return None
 
         try:
+            self.checkApiRate()
+
             r = requests.post(url, data=payload)
             j = json.loads(r.text)
             if j["status"] == "error":
