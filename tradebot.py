@@ -215,7 +215,7 @@ while True:
         print ":: Placing bid order:"
         print ":: - delete old "
         clean_orders("bid", sym, myorders)
-        print ":: - create order ({} @ {} = {})".format(amount, bid_price, amonut*bid_price)
+        print ":: - create order ({} @ {} = {})".format(amount, bid_price, amount*bid_price)
         hl.createOrder(sym, "buy", bid_price, amount)
     
     # check if top in ask:
