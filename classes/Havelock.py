@@ -46,7 +46,7 @@ class Havelock:
         cur_rate = (calls_in_window / time_window) / max_rate
 
         # exponential sleep scaling 
-        ex = 1.4
+        ex = 1.5
         scale = 1 + log(1, ex)
         sleep_time = max(0.0, (1.0/max_rate) * ((1+log(cur_rate, ex)) / scale))
 
