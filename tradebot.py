@@ -90,8 +90,12 @@ def update_log(hl_obj):
     hl_obj.fetchBalance()
     hl_obj.store(Config.hl_history)
 
+<<<<<<< HEAD
 
 hl = Havelock(Config)
+=======
+sym = "AMHASH1"
+>>>>>>> a7269159f59d9833180ad65f21ab6386e7e23d5d
 
 orders = hl.fetchOrders()
 hl.fetchBalance()
@@ -108,7 +112,7 @@ print "cash: {} - shares: {} - open orders: {}".format(
         cash, shares, len(myorders))
 
 
-wallet = {"cash": 0.10000, "shares": 100, 
+wallet = {"cash": 0.50000, "shares": 500, 
           "sold": 0.00000, "bought": 0.00000,
           "buy" : 0.00000, "sell"  : 0.00000,
           "fee" : 0.00000 }
