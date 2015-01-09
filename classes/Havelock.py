@@ -30,30 +30,26 @@ class Havelock:
     def checkApiRate(self):
         self.apiRate.append(time.time())
         self.apiRate = [x for x in self.apiRate if x > (time.time() - 600)]
-        if len(self.apiRate) < 2:
+        l = len(self.apiRate)
+        if l < 2:
             return
 
         diff = self.apiRate[-1] - self.apiRate[0]
         current = diff / 600.0
         ok = MAX_API_RATE_CALLS / 600.0
 
-        warn = 0.8 * ok
-        slow = 0.9 * ok
-        wait = 0.99 * ok
-        sl = None
-        if current > warn:
-            sl = ok
+        if current > (0.9*ok):
+            time.sleep(ok)
 
-        if current > slow: 
-            sl = 5*ok
+        if l > (0.8 * MAX_API_RATE_CALLS) and current > (0.9*ok):
+            time.sleep(5)
+            print "{} api calls in the last 600s (rate: {} == OK), current rate {}, sleeped {}".format(l, ok, current, 5)
 
-        if current > wait:
+        elif l > (0.99 * MAX_API_RATE_CALLS) and current > (0.99*ok):
             sl = 600 - diff
-
-        if sl is not None:
             time.sleep(sl)
-            print "{} api calls in the last 600s (rate: {} == OK), current rate {}, sleeped {}".format(len(self.apiRate), ok, current, sl)
-
+            print "CRITICAL: {} api calls in the last 600s (rate: {} == OK), current rate {}, sleeped {}".format(l, ok, current, 5)
+        
     def fetchData(self, dataType, post=None):
         payload = {}
 
