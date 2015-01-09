@@ -15,7 +15,8 @@ from utils import get_console_size
 min_spread = 0.015
 sell_fee = 0.004
 
-MIN_MAX_AMOUNT = (200, 550)
+MIN_MAX_SELL = (2, 15)
+MIN_MAX_BUY = (200, 893)
 
 min_sleep = 0.1
 max_sleep = 2
@@ -210,7 +211,7 @@ while True:
 
     # check if top in bid
     if top_bid["id"] not in myids:
-        amount = random.randint(*MIN_MAX_AMOUNT)
+        amount = random.randint(*MIN_MAX_BUY)
         
         print ":: Placing bid order:"
         print ":: - delete old "
@@ -220,7 +221,7 @@ while True:
     
     # check if top in ask:
     if top_ask["id"] not in myids:
-        amount = random.randint(*MIN_MAX_AMOUNT)
+        amount = random.randint(*MIN_MAX_SELL)
         print ":: Placing ask order:"
         print ":: - delete old "
         clean_orders("ask", sym, myorders)
