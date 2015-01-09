@@ -6,12 +6,23 @@ class Symbol(Transactions):
         self.symbol = name
 
     def getMeanPrice(self):
+        pr = self.getBuyAmount() + self.getSellAmount()
+        am = self.getBuyQuantity() + self.getSellQuantity()
+        if am == 0:
+            return 0.0
+        return (pr / am)
+
+        """ 
+        this is the old stuff, with fee included, 
+        i think, this is not correct.
+        
         pr = self.getBuyAmount() - self.getSellAmount() + self.getFeeAmount()
         am = self.getBuyQuantity() - self.getSellQuantity()
         if am == 0:
             return 0.0
 
         return (pr / am)
+        """
 
     def getLastPrice(self):
         buys = self.getBuy()
