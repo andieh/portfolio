@@ -35,8 +35,7 @@ class Havelock:
         if len(self.apiRate) < 2:
             return
 
-        #diff = self.apiRate[-1] - self.apiRate[0]
-        diff = self.apiRate[0] - (time.time() - time_window)
+        diff = self.apiRate[-1] - self.apiRate[0]
         
         # rates are fractions of 1 
         avg_rate = diff / time_window
@@ -94,7 +93,7 @@ class Havelock:
             return None
 
         try:
-            rate_data = self.checkApiRate()
+            rate_data = self.checkApiRate(True)
 
             r = requests.post(url, data=payload)
             j = json.loads(r.text)
