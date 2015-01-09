@@ -46,7 +46,7 @@ def get_balance(havelock_obj, symbol, hours_back, timezone=-6):
 def show_balance(havelock_obj, symbol, timezone=6):
     for h in [1, 2, 4, 8, 12, 24, 48]:
         print "[i] ({:>2}h) shares: {:>8} btc: {:>12.8f}". \
-            format(hours_back, *get_balance(havelock_obj, symbol, h, timezone))
+            format(h, *get_balance(havelock_obj, symbol, h, timezone))
 
 def show_market_info(bids, asks, fee, myids=None):
     ids = myids or []
@@ -173,7 +173,7 @@ while True:
         print "[i] BID action, delete existing, create new bid ({} @ {})".\
                 format(amount, bid_price)
 
-        clean_orders("buy", sym, myorders)
+        clean_orders("bid", sym, myorders)
         hl.createOrder(sym, "buy", bid_price, amount)
     
     # check if top in ask:
@@ -182,7 +182,7 @@ while True:
         print "[i] ASK action, delete existing, create new ask ({} @ {})". \
                 format(amount, ask_price)
 
-        clean_orders("sell", sym, myorders)
+        clean_orders("ask", sym, myorders)
         hl.createOrder(sym, "sell", ask_price, amount)
 
     if overview <= 0:
