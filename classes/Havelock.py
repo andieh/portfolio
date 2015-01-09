@@ -5,11 +5,7 @@ import json
 from Transactions import *
 from Portfolio import *
 import time
-
-# set maximum api rate
-# this is limited by havelock
-# calls / 600
-MAX_API_RATE_CALLS = 300
+from math import log 
 
 try:
     from utils import get_console_size
@@ -25,34 +21,43 @@ class Havelock:
         self.portfolio = Portfolio(self.conf.epsilon)
         self.havelockBalance = None
         self.havelockBalanceAvailable = None
-        self.apiRate = [] # calls in the last 600 s
+        
+        # (timestamps) api calls, last 600s
+        self.apiRate = [] 
 
-    def checkApiRate(self):
+    def checkApiRate(self, debug=False, nosleep=False):
+        time_window = 600.0
+        max_calls = 300
+
         self.apiRate.append(time.time())
-        self.apiRate = [x for x in self.apiRate if x > (time.time() - 600)]
+        self.apiRate = [x for x in self.apiRate if x > (time.time() - time_window)]
+        
         if len(self.apiRate) < 2:
             return
 
-        diff = self.apiRate[-1] - self.apiRate[0]
-        current = diff / 600.0
-        ok = MAX_API_RATE_CALLS / 600.0
+        #diff = self.apiRate[-1] - self.apiRate[0]
+        diff = self.apiRate[0] - (time.time() - time_window)
+        
+        # rates are fractions of 1 
+        avg_rate = diff / time_window
+        max_rate = max_calls / time_window
 
-        warn = 0.8 * ok
-        slow = 0.9 * ok
-        wait = 0.99 * ok
-        sl = None
-        if current > warn:
-            sl = ok
+        # exponential sleep scaling 
+        ex = 1.5
+        scale = 1 + log(1, ex)
+        sleep_time = max(0.0, (1.0/max_rate) * ((1+log(avg_rate, ex)) / scale))
 
-        if current > slow: 
-            sl = 5*ok
+        if sleep_time > 0.0 and not nosleep:
+            time.sleep(sleep_time)
+ 
+        if debug:
+            print "{} api calls in last window, cur. rate {}, sleeped {}". \
+                    format(len(self.apiRate), avg_rate, sleep_time)
 
-        if current > wait:
-            sl = 600 - diff
-
-        if sl is not None:
-            time.sleep(sl)
-            print "{} api calls in the last 600s (rate: {} == OK), current rate {}, sleeped {}".format(len(self.apiRate), ok, current, sl)
+        return {"sleep_time": sleep_time, 
+                "avg_rate": avg_rate, 
+                "max_rate": max_rate,
+                "remaining": time_window-len(self.apiRate)}
 
     def fetchData(self, dataType, post=None):
         payload = {}
@@ -89,10 +94,14 @@ class Havelock:
             return None
 
         try:
-            self.checkApiRate()
+            rate_data = self.checkApiRate()
 
             r = requests.post(url, data=payload)
             j = json.loads(r.text)
+            
+            # include rate data in output
+            j["rate_data"] = rate_data 
+            
             if j["status"] == "error":
                 print "Havelock - API error message: ", j["message"]
             if j["status"] != "ok":
