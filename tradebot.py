@@ -173,7 +173,7 @@ while True:
         print "[i] BID action, delete existing, create new bid ({} @ {})".\
                 format(amount, bid_price)
 
-        clean_orders("buy", sym)
+        clean_orders("buy", sym, myorders)
         hl.createOrder(sym, "buy", bid_price, amount)
     
     # check if top in ask:
