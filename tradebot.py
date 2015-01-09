@@ -173,7 +173,7 @@ while True:
         print "[i] BID action, delete existing, create new bid ({} @ {})".\
                 format(amount, bid_price)
 
-        self.clean_orders("buy", sym)
+        clean_orders("buy", sym)
         hl.createOrder(sym, "buy", bid_price, amount)
     
     # check if top in ask:
@@ -182,7 +182,7 @@ while True:
         print "[i] ASK action, delete existing, create new ask ({} @ {})". \
                 format(amount, ask_price)
 
-        self.clean_orders("sell", sym)
+        clean_orders("sell", sym)
         hl.createOrder(sym, "sell", ask_price, amount)
 
     if overview <= 0:
