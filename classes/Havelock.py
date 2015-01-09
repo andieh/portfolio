@@ -25,8 +25,9 @@ class Havelock:
         # (timestamps) api calls, last 600s
         self.apiRate = [] 
 
-    def checkApiRate(self, nosleep=False):
+    def checkApiRate(self, nosleep=False, apirate=None):
         debug = self.conf.debug
+        apirate = apirate or 0
 
         time_window = 600.0
         max_calls = 300
@@ -38,27 +39,29 @@ class Havelock:
             return
 
         diff = self.apiRate[-1] - self.apiRate[0]
+        calls_in_window = max(apirate, len(self.apiRate))
         
-        # rates are fractions of 1 
         avg_rate = diff / time_window
-        max_rate = max_calls / time_window
+        max_rate = max_calls / time_window 
+        cur_rate = (calls_in_window / time_window) / max_rate
 
         # exponential sleep scaling 
-        ex = 1.5
+        ex = 1.4
         scale = 1 + log(1, ex)
-        sleep_time = max(0.0, (1.0/max_rate) * ((1+log(avg_rate, ex)) / scale))
+        sleep_time = max(0.0, (1.0/max_rate) * ((1+log(cur_rate, ex)) / scale))
 
         if sleep_time > 0.0 and not nosleep:
             time.sleep(sleep_time)
  
         if debug:
-            print "{} api calls in last window, cur. rate {}, sleeped {}". \
-                    format(len(self.apiRate), avg_rate, sleep_time)
+            print "api-calls: {:>3d} in time window - rate calculated: {:.2%} reported: {:.2%} - sleep: {:>4d}msecs". \
+                    format(len(self.apiRate), avg_rate, cur_rate, int(sleep_time*1000))
 
         return {"sleep_time": sleep_time, 
-                "avg_rate": avg_rate, 
+                "avg_rate": avg_rate,
+                "cur_rate": cur_rate,
                 "max_rate": max_rate,
-                "remaining": time_window-len(self.apiRate)}
+                "remaining": max_calls - calls_in_window}
 
     def fetchData(self, dataType, post=None):
         payload = {}
@@ -95,10 +98,12 @@ class Havelock:
             return None
 
         try:
-            rate_data = self.checkApiRate(True)
 
             r = requests.post(url, data=payload)
             j = json.loads(r.text)
+            
+            apirate = int(j["apirate"]) if "apirate" in j else 0
+            rate_data = self.checkApiRate(nosleep=False, apirate=apirate)
             
             # include rate data in output
             j["rate_data"] = rate_data 
