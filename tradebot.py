@@ -12,6 +12,7 @@ from classes import Rates
 from config import Config
 from utils import get_console_size
 
+# test partial commit
 
 
 def show_balance(havelock_obj, symbol, hours_back):
