@@ -317,12 +317,12 @@ class Havelock:
         print "-" * console_width
 
 
-        fmts =    [".2f", "d", "s", ".3f", ".5f", ".5f", ".3f"]
-        header =  ["Trend (%)", "Buys", "", "Market (B)", 
+        fmts =    [".2f", "s", "s", ".3f", ".5f", ".5f", ".3f"]
+        header =  ["Trend (%)", "Buys (Price)", "", "Market (B)", 
                    "Divs (B)", "Mean (B)", "Win (B)"]
    
-        fmts2 =   [".2f", "d", "d", ".3f", ".5f", ".5f", ".2f"]
-        header2 = ["Overall (%)", "Sells", "Sum", "Book (B)", 
+        fmts2 =   [".2f", "s", "d", ".3f", ".5f", ".5f", ".2f"]
+        header2 = ["Overall (%)", "Sells (Price)", "Sum", "Book (B)", 
                    "Fee (B)", "Cur (B)", "Win (E)"]
     
         colwidth = (console_width / len(header)) - 3
@@ -342,11 +342,13 @@ class Havelock:
             _s = "{1:-^{0}}".format(console_width, "> " + s + " <")
             print _s[console_width/5:] + _s[:console_width/5]
 
-            data =  [p.getTrend(s), t.getBuyQuantity(), "", 
+            buy = "{:d} ({:f})".format(t.getBuyQuantity(), t.getMeanBuyPrice())
+            data =  [p.getTrend(s), buy, "", 
                      p.getCurrentValue(s), t.getDividendAmount(), 
                      t.getMeanPrice(), p.getCurrentWin(s) ]
 
-            data2 = [p.getOverallTrend(s), t.getSellQuantity(), 
+            sell = "{:d} ({:f})".format(t.getSellQuantity(), t.getMeanSellPrice())
+            data2 = [p.getOverallTrend(s), sell, 
                      t.getShareQuantity(), p.getBookValue(s), t.getFeeAmount(),
                      p.getCurrentPrice(s), p.getCurrentWin(s) * btc2eur] 
 

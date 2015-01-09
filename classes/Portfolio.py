@@ -24,6 +24,20 @@ class Symbol(Transactions):
         return (pr / am)
         """
 
+    def getMeanBuyPrice(self):
+        pr = self.getBuyAmount()
+        am = self.getBuyQuantity()
+        if am == 0:
+            return 0.0
+        return (pr / am)
+
+    def getMeanSellPrice(self):
+        pr = self.getSellAmount()
+        am = self.getSellQuantity()
+        if am == 0:
+            return 0.0
+        return (pr / am)
+
     def getLastPrice(self):
         buys = self.getBuy()
         sells = self.getSell()
