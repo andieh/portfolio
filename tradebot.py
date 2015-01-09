@@ -182,7 +182,7 @@ while True:
         print "[i] ASK action, delete existing, create new ask ({} @ {})". \
                 format(amount, ask_price)
 
-        clean_orders("sell", sym)
+        clean_orders("sell", sym, myorders)
         hl.createOrder(sym, "sell", ask_price, amount)
 
     if overview <= 0:
