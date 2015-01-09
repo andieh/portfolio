@@ -25,7 +25,9 @@ class Havelock:
         # (timestamps) api calls, last 600s
         self.apiRate = [] 
 
-    def checkApiRate(self, debug=False, nosleep=False):
+    def checkApiRate(self, nosleep=False):
+        debug = self.conf.debug
+
         time_window = 600.0
         max_calls = 300
 
