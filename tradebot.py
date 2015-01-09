@@ -86,7 +86,7 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None, last_table=Non
 
     # showing bids / asks 
     out = ["::",]
-    out.append(":: {:^25}|{:^25}".format("bids", "asks"))
+    out.append(":: {:^25} |{:^25}".format("bids", "asks"))
     out.append(":: " + "-"*51 )
     for b, a in zip(bids[:12], asks[:12]):
         out.append("::  {:>6d} - {:>12.8f} {} |{:>6d} - {:>12.8f} {}". \
@@ -176,10 +176,9 @@ while True:
         overview = 10
         synchronize(hl)
         show_balance(hl, sym)
+        last_table = 0
     else:
         overview -= 1
-
-    
     
     tmpl_spread_low = ":: spread too low {}{:.8f} BTC ({:.2%}) - waiting..."
     if spread < fee:
