@@ -109,7 +109,7 @@ class Transaction:
             if r[5+offset]:
                 self.amount = float(r[5+offset])
                 st = self.type
-                if (st == "fee" or st == "buy" or st == "buyipo") and self.amount < 0:
+                if (st == "fee" or st == "buy" or st == "buyipo" or st == "withdraw") and self.amount < 0:
                     self.amount *= -1
             if r[6+offset]:
                 self.balance = float(r[offset+6])
