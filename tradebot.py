@@ -83,6 +83,15 @@ while True:
     # spread
     spread = top_ask["price"] - top_bid["price"]
     fee = top_ask["price"] * sell_fee
+    
+    # showing current bid/ask
+    print "-"*60
+    print "SPREAD: {} ({:.3f}%) FEE: {}".format(spread, spread/top_ask["price"]*100, fee)
+    for b, a in zip(bids[:10], asks[:10]):
+        print "{:>7} - {:>12.8f} {}|{:>7} - {:>12.8f} {}". \
+                format(b["amount"], b["price"], "<-" if b["id"] in myids else "  ",
+                       a["amount"], a["price"], "<-" if a["id"] in myids else "  ")
+
 
     notrade = False
     if spread < fee:
@@ -127,14 +136,7 @@ while True:
                     hl.cancelOrder(o_id)
             hl.createOrder(sym, "sell", top_ask["price"]-1e-8, amount)
     
-    print "-"*60
-    print "SPREAD: {} ({:.3f}%) FEE: {}".format(spread, spread/top_ask["price"]*100, fee)
-    for b, a in zip(bids[:10], asks[:10]):
-        print "{:>7} - {:>12.8f} {}|{:>7} - {:>12.8f} {}". \
-                format(b["amount"], b["price"], "<-" if b["id"] in myids else "  ",
-                       a["amount"], a["price"], "<-" if a["id"] in myids else "  ")
-
-    p = hl.portfolio
+        p = hl.portfolio
     t = p.symbols[sym]
     if overview <= 0:
         overview = 100
