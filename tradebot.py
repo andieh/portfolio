@@ -12,8 +12,8 @@ from classes import Rates
 from config import Config
 from utils import get_console_size
 
-# test partial commit
-
+min_spread = 0.015
+sell_fee = 0.004
 
 def show_balance(havelock_obj, symbol, hours_back):
      # (timezone -6h) + X hours
@@ -82,7 +82,7 @@ while True:
     second_ask = asks[1]
     # spread
     spread = top_ask["price"] - top_bid["price"]
-    fee = top_ask["price"] * 0.004
+    fee = top_ask["price"] * sell_fee
 
     notrade = False
     if spread < fee:
@@ -90,8 +90,8 @@ while True:
         time.sleep(random.randint(*MIN_MAX_SLEEP))
         notrade = True
 
-    if spread/top_ask["price"] < 0.03:
-        print "##### SPREAD under 3% - wait..."
+    if spread/top_ask["price"] < min_spread:
+        print "##### SPREAD under 1,5% - wait..."
         time.sleep(random.randint(*MIN_MAX_SLEEP))
         notrade = True
 
