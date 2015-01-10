@@ -12,21 +12,21 @@ from classes import Rates
 from config import Config
 from utils import get_console_size
 
-min_spread = 0.015
 sell_fee = 0.004
+min_spread = sell_fee * 2
 
-MIN_MAX_SELL = (2, 15)
-MIN_MAX_BUY = (200, 893)
-
-min_sleep = 0.1
-max_sleep = 2
+MIN_MAX_SELL = (60, 350)
+MIN_MAX_BUY = (60, 350)
 
 min_step = 1e-8
 
-#### Does not work as intended :(
-# 'True' will lead to an cleared console in each iteration
-# 'False' keeps writing to stdout as usual
-clear_console = False
+TZ_SHIFT = -6
+
+# prohibit any order creation (canceling is ok)
+DO_NOT_TRADE = False
+
+# clear console before writing new content
+CLEAR_CONSOLE = True
 
 
 if len(sys.argv) != 2:
@@ -35,6 +35,10 @@ if len(sys.argv) != 2:
 
 # take symbol from cmdline
 sym = sys.argv[1]
+
+# fancy (useless) header shit 
+header_idx = 3
+header_dir = 1
 
 def get_balance(havelock_obj, symbol, hours_back, timezone=-6):
      # (timezone correction) + X hours
@@ -50,56 +54,70 @@ def get_balance(havelock_obj, symbol, hours_back, timezone=-6):
 
     return t.getShareQuantity(), balance
 
-def show_balance(hl_obj, symbol, timezone=-6):
-    out = []
-    for h in [1, 2, 4, 8, 12, 24, 48]:
-        shares, balance = get_balance(hl_obj, symbol, h, timezone)
-        out.append( (" {:>11d} ".format(h), 
-                     " {:>11d} ".format(shares),
-                     " {:>13.8f} ".format(balance)) )
-
-    print "::"
-    print ":: {:>13} :: {:>13} :: {:>14}".format(
-            "since (h)", "shares", "balance")
-    print ":: " + "-"*51
-    for j, s, b in out:
-        print ":: {} :: {} :: {}".format(j, s, b)
-
-def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None, last_table=None):
+def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
     ids = myids or []
- 
+
+    o, to = [], []
+    top_frame_width = get_console_size()["width"] - len(time.ctime()) - 6
+    
+    o.append("{} \\\\ {}".format(
+        ":"*top_frame_width, time.strftime("%d.%m.%Y \\\\ %H:%M:%S \\\\")))
+    
+    # wormy header 
+    global header_idx, header_dir
+    o[-1] = o[-1][:header_idx-1] + \
+            "".join(random.choice(["o","O","0", "o"]) for i in xrange(3)) + \
+            o[-1][header_idx+2:]
+    header_idx += header_dir
+    if 3 > header_idx > top_frame_width - 5:
+        header_dir *= -1
+   
+    # reset start/end for transactions
     hl_obj.setStartDate(0)
     hl_obj.setEndDate(int(time.time()))
-
-    print 
-    top_frame_width = get_console_size()["width"] - len(time.ctime()) - 5
-    print "{} # {}".format(":"*top_frame_width, time.ctime())
     
     # market stats:
     cash = hl_obj.havelockBalanceAvailable 
     shares = hl_obj.portfolio.getSymbol(symbol).getShareQuantity()
-    print ":: symbol:   {}                 :: open orders: {:<2d}". \
-        format(symbol, len(myids) if myids is not None else 0)
-    print ":: spread: {:>12.8f} BTC ({:>6.3%}) :: fee:         {:<10.8f} BTC ({:>4.1%})". \
-        format(spread, spread/(asks[0]["price"]), asks[0]["price"]*fee, fee)
-    print ":: cash:   {:>12.8f} BTC          :: shares:      {:<6d}".\
-        format(cash, shares)
+
+    o.append(":: symbol:   {}                 :: open orders: {:<2d}". \
+        format(symbol, len(myids) if myids is not None else 0))
+    o.append(":: spread: {:>12.8f} BTC ({:>6.3%}) :: fee:         {:<10.8f} BTC ({:>4.1%})". \
+        format(spread, spread/(asks[0]["price"]), asks[0]["price"]*fee, fee))
+    o.append(":: cash:   {:>12.8f} BTC          :: shares:      {:<6d}".\
+        format(cash, shares))
 
     # showing bids / asks 
-    out = ["::",]
-    out.append(":: {:^25} |{:^25}".format("bids", "asks"))
-    out.append(":: " + "-"*51 )
-    for b, a in zip(bids[:12], asks[:12]):
-        out.append("::  {:>6d} - {:>12.8f} {} |{:>6d} - {:>12.8f} {}". \
-            format(b["amount"], b["price"], "<-" if b["id"] in ids else "  ",
-                   a["amount"], a["price"], "<-" if a["id"] in ids else "  ")
-        ) 
+    o.append("::")
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10}". \
+            format(""    , ""    , "window", "", ""))
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10}". \
+            format("bids", "asks", "hours"  , "shares", "balance"))
+
+    o.append(":: " + "-"*51 + " "*6 + "-"*51) 
     
-    # do not print same table multiple times... 
-    # - except if console is cleared on each iteration
-    if last_table != out or clear_console:
-        print "\n".join(out)
-    return out
+    data = [[], [], []]
+    for h in [1, 2, 3, 4, 6, 8, 12, 18, 24, 36, 48, 60]:
+        data[0].append(h)
+        t = get_balance(hl_obj, symbol, h, TZ_SHIFT)
+        data[1].append(t[0])
+        data[2].append(t[1])
+    
+    for bid, ask, hours, shares, balance in \
+            zip(bids[:12], asks[:12], data[0], data[1], data[2]):
+
+        o.append(":: {:>6d} - {:>12.8f} {} |{:>6d} - {:>12.8f} {}". \
+            format(bid["amount"], bid["price"], 
+                   "<-" if bid["id"] in ids else "  ",
+                   ask["amount"], ask["price"], 
+                   "<-" if ask["id"] in ids else "  ")
+        )
+        o[-1] += " "*4
+        o[-1] += "{:>12d} | {:>7d} | {:>10.6f}". \
+                format(hours, shares, balance)
+    
+    o.append("::")
+    return o
 
 def clean_orders(otype, symbol, orders):
     for o_id, o in myorders.items():
@@ -107,8 +125,11 @@ def clean_orders(otype, symbol, orders):
             hl.cancelOrder(o_id)
 
 def get_bids_asks(symbol):
-    asks, bids = hl.fetchOrderbook(symbol, full=True)
-    
+    res = hl.fetchOrderbook(symbol, full=True)
+    if res is None:
+        print ":: Could not fetch orderbook, apirate ??"
+    asks, bids = res
+
     asks = [{"price": float(d["price"]), 
              "amount": int(d["amount"]), 
              "id": int(d["id"])} for d in asks.values()]
@@ -129,6 +150,12 @@ def synchronize(hl_obj):
     hl_obj.store(Config.hl_history)
     return hl_obj
 
+def clear_console():
+    print chr(27) + "[2J"
+    print chr(27) + "[H"
+
+
+
 hl = Havelock(Config)
 hl.loadTransactionFile(Config.hl_history)
 
@@ -139,18 +166,14 @@ if sym not in hl.portfolio.symbols:
 synchronize(hl)
 
 overview = 1
-last_table = None 
-output = o = ""
+oput = o = []
+
+idbook = {}
 
 while True:
-    time.sleep(random.random() * (max_sleep-min_sleep) + min_sleep)
-    if clear_console:
-        print chr(27) + "[2J" 
-        print chr(27) + "[H"
-    
-    
     # own orders + ids
-    myorders = dict((d["id"], d) for d in hl.fetchOrders() if d["symbol"] == sym)
+    myorders = dict((d["id"], d) for d in hl.fetchOrders() \
+            if d["symbol"] == sym)
     myids = [int(x[0]) for x in myorders.items()]
     
     # get current asks/bids
@@ -168,66 +191,86 @@ while True:
     bid_price = top_bid["price"] + min_step
 
     # general market information
-    last_table = show_market_info(
+    o = show_market_info(
         hl, bids, asks, sell_fee, sym, 
-        myids=myids, last_table=last_table)
+        myids=myids)
 
     # show some balance overviews...
     if overview <= 0:
-        overview = 10
+        overview = 5
         synchronize(hl)
-        show_balance(hl, sym)
         last_table = 0
     else:
         overview -= 1
     
+    access_trade_section = True
+
     tmpl_spread_low = ":: spread too low {}{:.8f} BTC ({:.2%}) - waiting..."
     if spread < fee:
-        print "::"
-        print tmpl_spread_low.format("", fee, sell_fee)
-        continue
+        o.append("::")
+        o.append(tmpl_spread_low.format("", fee, sell_fee))
+        access_trade_section = False
 
     elif spread/top_ask["price"] < min_spread:
-        print "::"
-        print tmpl_spread_low.format("may bid from: ", 
+        o.append("::")
+        o.append(tmpl_spread_low.format("may bid from: ", 
                    top_ask["price"] - top_ask["price"] * min_spread, 
-                   min_spread) 
-        continue
- 
+                   min_spread))
+        access_trade_section = False 
+
+    
+    if not access_trade_section or DO_NOT_TRADE:
+        if CLEAR_CONSOLE: clear_console()
+        print "\n".join(o)
+        continue 
+
+    #### TRADE SECTION
+    ############################################################################
     # check range to second (bid)
     pre = ":: too much difference in price to second"
-    if top_bid["id"] in myids and second_bid["price"] < top_bid["price"] - min_step:
-        print "{} ({:.8f}) in bid order - canceling!". \
-            format(pre, bid_price - second_bid["price"])
+    if top_bid["id"] in myids and \
+            second_bid["price"] < top_bid["price"] - min_step and \
+            not DO_NOT_TRADE:
+
+        o.append("{} ({:.8f}) in bid order - canceling!". \
+            format(pre, bid_price - second_bid["price"]))
         hl.cancelOrder(top_bid["id"])
         bid_price = second_bid["price"] + min_step
 
     # check range to second (ask)
-    if top_ask["id"] in myids and second_ask["price"] > top_ask["price"] + min_step:
-        print "{} ({:.8f}) in ask order - canceling!". \
-            format(pre, second_ask["price"] - ask_price)
+    if top_ask["id"] in myids and \
+            second_ask["price"] > top_ask["price"] + min_step and \
+            not DO_NOT_TRADE:
+
+        o.append("{} ({:.8f}) in ask order - canceling!". \
+            format(pre, second_ask["price"] - ask_price))
         hl.cancelOrder(top_ask["id"])
         ask_price = second_ask["price"] - min_step
 
     # check if top in bid
-    if top_bid["id"] not in myids:
+    if top_bid["id"] not in myids and not DO_NOT_TRADE:
         amount = random.randint(*MIN_MAX_BUY)
         
-        print ":: Placing bid order:"
-        print ":: - delete old "
+        o.append(":: Placing bid order:")
+        o.append(":: - delete old ")
         clean_orders("bid", sym, myorders)
-        print ":: - create order ({} @ {} = {})".format(amount, bid_price, amount*bid_price)
+        o.append(":: - create order ({} @ {} = {})". \
+                format(amount, bid_price, amount*bid_price))
         hl.createOrder(sym, "buy", bid_price, amount)
     
     # check if top in ask:
-    if top_ask["id"] not in myids:
+    if top_ask["id"] not in myids and not DO_NOT_TRADE:
         amount = random.randint(*MIN_MAX_SELL)
-        print ":: Placing ask order:"
-        print ":: - delete old "
+        o.append(":: Placing ask order:")
+        o.append(":: - delete old ")
         clean_orders("ask", sym, myorders)
-        print ":: - create order ({} @ {} = {})".format(amount, ask_price, amount*ask_price)
+        o.append(":: - create order ({} @ {} = {})". \
+                format(amount, ask_price, amount*ask_price))
         hl.createOrder(sym, "sell", ask_price, amount)
 
+    if CLEAR_CONSOLE: 
+        clear_console()
+    print "\n".join(o)
 
     
 
