@@ -25,10 +25,10 @@ min_step = 1e-8
 TZ_SHIFT = -6
 
 # prohibit any order creation (canceling is ok)
-DO_NOT_TRADE = True
+DO_NOT_TRADE = False
 
 # clear console before writing new content
-CLEAR_CONSOLE = False
+CLEAR_CONSOLE = True
 
 if len(sys.argv) != 2:
     print "Usage: python2 tradebot.py <symbol>"
