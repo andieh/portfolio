@@ -54,8 +54,10 @@ class Havelock:
             time.sleep(sleep_time)
  
         if debug:
-            print "api-calls: {:>3d} in time window - rate calculated: {:.2%} reported: {:.2%} - sleep: {:>4d}msecs". \
-                    format(len(self.apiRate), avg_rate, cur_rate, int(sleep_time*1000))
+            print ("api-calls: {:>3d} in time window - rate calculated: " +
+                   "{:.2%} reported: {:.2%} - sleep: {:>4d}msecs"). \
+                    format(len(self.apiRate), avg_rate, 
+                           cur_rate, int(sleep_time*1000))
 
         return {"sleep_time": sleep_time, 
                 "avg_rate": avg_rate,
@@ -64,6 +66,7 @@ class Havelock:
                 "remaining": max_calls - calls_in_window}
 
     def fetchData(self, dataType, post=None):
+        debug = self.conf.debug
         payload = {}
 
         # use post to update the payload
@@ -97,8 +100,13 @@ class Havelock:
             print "data Type not known!" 
             return None
 
-        try:
+        if debug:
+            print "Send hl API - type: {} payload: {}". \
+                    format(dataType, " ".join("{}: {}". \
+                    format(k,v) for k,v in payload.items()))
 
+
+        try:
             r = requests.post(url, data=payload)
             j = json.loads(r.text)
             
