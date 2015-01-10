@@ -18,16 +18,17 @@ min_spread = sell_fee * 2
 MIN_MAX_SELL = (60, 350)
 MIN_MAX_BUY = (60, 350)
 
+# minimal trading difference/step
 min_step = 1e-8
 
+# timezone shift of target
 TZ_SHIFT = -6
 
 # prohibit any order creation (canceling is ok)
-DO_NOT_TRADE = False
+DO_NOT_TRADE = True
 
 # clear console before writing new content
-CLEAR_CONSOLE = True
-
+CLEAR_CONSOLE = False
 
 if len(sys.argv) != 2:
     print "Usage: python2 tradebot.py <symbol>"
@@ -71,6 +72,7 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
     header_idx += header_dir
     if 3 > header_idx > top_frame_width - 5:
         header_dir *= -1
+        header_idx += 3*header_dir
    
     # reset start/end for transactions
     hl_obj.setStartDate(0)
@@ -190,19 +192,22 @@ while True:
     ask_price = top_ask["price"] - min_step 
     bid_price = top_bid["price"] + min_step
 
+    # every 10 iterations, refresh - TODO inside a thread!?
+    # (Portfolio, Balance, Transactions)
+    if overview <= 0:
+        overview = 10
+        synchronize(hl)
+    else:
+        overview -= 1
+
     # general market information
     o = show_market_info(
         hl, bids, asks, sell_fee, sym, 
         myids=myids)
+ 
+    # use them :)
+    #print hl.transactions.getTransactions(sym, time.time() - (60*60*6 + 60*60*24), time.time())
 
-    # show some balance overviews...
-    if overview <= 0:
-        overview = 5
-        synchronize(hl)
-        last_table = 0
-    else:
-        overview -= 1
-    
     access_trade_section = True
 
     tmpl_spread_low = ":: spread too low {}{:.8f} BTC ({:.2%}) - waiting..."
