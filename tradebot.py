@@ -116,7 +116,7 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
     o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>9}". \
             format("bids", "asks", "hours"  , "shares", "balance", "buys", "sells", "price", "price", "Ø win"))
 
-    o.append(":: " + "-"*51 + " "*6 + "-"*104) 
+    o.append(":: " + "-"*51 + " "*6 + "-"*81) 
     
     data = [[], [], [], [], [], [], [], []]
     for h in [1, 2, 6, 12, 24, 24*4, 24*10, 24*20, 24*30, 24*60, 24*90, 24*178]:
