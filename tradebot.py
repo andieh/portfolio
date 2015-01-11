@@ -48,31 +48,48 @@ def get_balance(havelock_obj, symbol, hours_back, timezone=-6):
     
     p = havelock_obj.portfolio
     t = p.symbols[symbol]
+    
 
     havelock_obj.setStartDate(int(start))
     havelock_obj.setEndDate(int(end))
     balance = p.getCurrentWin(symbol) - t.getDividendAmount()
-
-    return t.getShareQuantity(), balance
+    
+    return {"amount": t.getShareQuantity(), 
+            "balance": balance,
+            "buys": havelock_obj.transactions.getBuyAmount(symbol),
+            "sells": havelock_obj.transactions.getSellAmount(symbol),
+            "fees": havelock_obj.transactions.getFeeAmount(symbol),
+            "buy_shares" :havelock_obj.transactions.getBuyQuantity(symbol),
+            "sell_shares": havelock_obj.transactions.getSellQuantity(symbol)
+            }
 
 def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
     ids = myids or []
 
     o, to = [], []
-    top_frame_width = get_console_size()["width"] - len(time.ctime()) - 6
-    
+
+    # time and header-line
+    dt = time.strftime("%d.%m.%Y \\\\ %H:%M:%S \\\\")
+    top_frame_width = get_console_size()["width"] - len(dt) - 6
     o.append("{} \\\\ {}".format(
-        ":"*top_frame_width, time.strftime("%d.%m.%Y \\\\ %H:%M:%S \\\\")))
+        ":"*top_frame_width, dt))
     
     # wormy header 
-    global header_idx, header_dir
+    global header_idx, header_dir 
+    worm_parts = ["o","O","0", "o"]
     o[-1] = o[-1][:header_idx-1] + \
-            "".join(random.choice(["o","O","0", "o"]) for i in xrange(3)) + \
+            "".join(random.choice(worm_parts) for i in xrange(3)) + \
             o[-1][header_idx+2:]
     header_idx += header_dir
-    if 3 > header_idx > top_frame_width - 5:
+    if header_idx > top_frame_width - 5:
+        header_dir = -1
+        header_idx = top_frame_width - 5
+    elif header_idx < 3:
+        header_dir = 1
+        header_idx = 3 
+    elif random.random() < 0.05:
         header_dir *= -1
-        header_idx += 3*header_dir
+
    
     # reset start/end for transactions
     hl_obj.setStartDate(0)
@@ -91,22 +108,26 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
 
     # showing bids / asks 
     o.append("::")
-    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10}". \
-            format(""    , ""    , "window", "", ""))
-    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10}". \
-            format("bids", "asks", "hours"  , "shares", "balance"))
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>10} | {:>10}". \
+            format(""    , ""    , "window", "", "", "avg-buy", "avg-sell", "avg"))
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>10} | {:>10}". \
+            format("bids", "asks", "hours"  , "shares", "balance", "price", "price", "price"))
 
-    o.append(":: " + "-"*51 + " "*6 + "-"*51) 
+    o.append(":: " + "-"*51 + " "*6 + "-"*74) 
     
-    data = [[], [], []]
+    data = [[], [], [], [], [], []]
     for h in [1, 2, 3, 4, 6, 8, 12, 18, 24, 36, 48, 60]:
         data[0].append(h)
-        t = get_balance(hl_obj, symbol, h, TZ_SHIFT)
-        data[1].append(t[0])
-        data[2].append(t[1])
+        d = get_balance(hl_obj, symbol, h, TZ_SHIFT)
+        data[1].append(d["amount"])
+        data[2].append(d["balance"])
+        data[3].append((d["buys"] / d["buy_shares"]) if d["buy_shares"] > 0 else 0)
+        data[4].append(((d["sells"]+d["fees"]) / d["sell_shares"]) if d["sell_shares"] > 0 else 0)
+        t = d["buys"] - d["fees"] - d["sells"]
+        data[5].append((float(d["buy_shares"]-d["sell_shares"])/t if t > 0 else 0))
     
-    for bid, ask, hours, shares, balance in \
-            zip(bids[:12], asks[:12], data[0], data[1], data[2]):
+    for bid, ask, hours, shares, balance, buys, sells, avg_price in \
+            zip(bids[:12], asks[:12], data[0], data[1], data[2], data[3], data[4], data[5]):
 
         o.append(":: {:>6d} - {:>12.8f} {} |{:>6d} - {:>12.8f} {}". \
             format(bid["amount"], bid["price"], 
@@ -115,8 +136,8 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
                    "<-" if ask["id"] in ids else "  ")
         )
         o[-1] += " "*4
-        o[-1] += "{:>12d} | {:>7d} | {:>10.6f}". \
-                format(hours, shares, balance)
+        o[-1] += "{:>12d} | {:>7d} | {:>10.6f} | {:>10.8f} | {:>10.8f} | {:>10.8f}". \
+                format(hours, shares, balance, buys, sells, avg_price)
     
     o.append("::")
     return o
@@ -173,10 +194,12 @@ oput = o = []
 idbook = {}
 
 while True:
-    # own orders + ids
-    myorders = dict((d["id"], d) for d in hl.fetchOrders() \
-            if d["symbol"] == sym)
-    myids = [int(x[0]) for x in myorders.items()]
+    # own orders + ids 
+    tmp = hl.fetchOrders()
+    if tmp is not None:
+        myorders = dict((d["id"], d) for d in tmp \
+                if d["symbol"] == sym)
+        myids = [int(x[0]) for x in myorders.items()]
     
     # get current asks/bids
     bids, asks = get_bids_asks(sym)
