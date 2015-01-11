@@ -126,7 +126,7 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
         data[5].append((d["buys"] / d["buy_shares"]) if d["buy_shares"] > 0 else 0)
         data[6].append(((d["sells"]+d["fees"]) / d["sell_shares"]) if d["sell_shares"] > 0 else 0)
         t = d["sells"] - d["fees"] - d["buys"]
-        data[7].append((float(d["shares"])/t if t > 0 else 0))
+        data[7].append((float(d["amount"])/t if t > 0 else 0))
     
     for bid, ask, hours, shares, balance, buys, sells, avg_buy, avg_sell, avg_price in \
             zip(bids[:12], asks[:12], *data):
