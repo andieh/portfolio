@@ -1,3 +1,5 @@
+#-*- coding: utf-8 -*-
+
 import sys, os
 import argparse
 import math
@@ -107,13 +109,14 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
         format(cash, shares))
 
     # showing bids / asks 
-    o.append("::")
-    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>12} | {:>12} | {:>10} | {:>10}". \
-            format(""    , ""    , "window", "", "", "", "", "avg-buy", "avg-sell", "avg"))
-    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>12} | {:>12} | {:>10} | {:>10}". \
-            format("bids", "asks", "hours"  , "shares", "balance", "buys", "sells", "price", "price", "win"))
+    o.append("::" + " "*79 + "{:^65}".format("mBTC"))
+    o.append("::" + " "*78 + "+" + "-"*60)
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>7} | {:>7} | {:>7} | {:>8} | {:>8} | {:>9}". \
+            format(""    , ""    , "window", "", "",             "", "", "Ø-buy", "Ø-sell", ""))
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>7} | {:>9}". \
+            format("bids", "asks", "hours"  , "shares", "balance", "buys", "sells", "price", "price", "Ø win"))
 
-    o.append(":: " + "-"*51 + " "*6 + "-"*99) 
+    o.append(":: " + "-"*51 + " "*6 + "-"*104) 
     
     data = [[], [], [], [], [], [], [], []]
     for h in [1, 2, 6, 12, 24, 24*4, 24*10, 24*20, 24*30, 24*60, 24*90, 24*178]:
@@ -139,8 +142,8 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
                    "<-" if ask["id"] in ids else "  ")
         )
         o[-1] += " "*4
-        o[-1] += "{:>12d} | {:>7d} | {:>10.6f} | {:>12.8f} | {:>12.8f} | {:>10.8f} | {:>10.8f} | {:>10.8f}". \
-                format(hours, shares, balance, buys, sells, avg_buy, avg_sell, avg_price)
+        o[-1] += "{:>12d} | {:>7d} | {:>7.1f} | {:>7.1f} | {:>7.1f} | {:>7.5f} | {:>7.5f} | {:>8.5f}". \
+                format(hours, shares, balance*1e3, buys*1e3, sells*1e3, avg_buy*1e3, avg_sell*1e3, avg_price*1e3)
     
     o.append("::")
     return o
@@ -154,6 +157,7 @@ def get_bids_asks(symbol):
     res = hl.fetchOrderbook(symbol, full=True)
     if res is None:
         print ":: Could not fetch orderbook, apirate ??"
+        return None, None
     asks, bids = res
 
     asks = [{"price": float(d["price"]), 
@@ -206,6 +210,8 @@ while True:
     
     # get current asks/bids
     bids, asks = get_bids_asks(sym)
+    if bids is None or asks is None:
+        continue
     # buying shares for price
     top_bid, second_bid = bids[:2]
     # selling shares for price
