@@ -108,25 +108,26 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
 
     # showing bids / asks 
     o.append("::")
-    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>10} | {:>10} | {:>10} | {:>10}". \
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>12} | {:>12} | {:>10} | {:>10}". \
             format(""    , ""    , "window", "", "", "", "", "avg-buy", "avg-sell", "avg"))
-    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>10} | {:>10} | {:>10} | {:>10}". \
-            format("bids", "asks", "hours"  , "shares", "balance", "buys", "sells", "price", "price", "price"))
+    o.append("::{:^25} |{:^25}  {:>13} | {:>7} | {:>10} | {:>10} | {:>12} | {:>12} | {:>10} | {:>10}". \
+            format("bids", "asks", "hours"  , "shares", "balance", "buys", "sells", "price", "price", "win"))
 
-    o.append(":: " + "-"*51 + " "*6 + "-"*74) 
+    o.append(":: " + "-"*51 + " "*6 + "-"*99) 
     
     data = [[], [], [], [], [], [], [], []]
-    for h in [1, 2, 3, 4, 6, 8, 12, 18, 24, 36, 48, 60]:
+    for h in [1, 2, 6, 12, 24, 24*4, 24*10, 24*20, 24*30, 24*60, 24*90, 24*178]:
         data[0].append(h)
         d = get_balance(hl_obj, symbol, h, TZ_SHIFT)
         data[1].append(d["amount"])
         data[2].append(d["balance"])
         data[3].append(d["buys"])
         data[4].append(d["sells"])
-        data[5].append((d["buys"] / d["buy_shares"]) if d["buy_shares"] > 0 else 0)
-        data[6].append(((d["sells"]+d["fees"]) / d["sell_shares"]) if d["sell_shares"] > 0 else 0)
-        t = d["sells"] - d["fees"] - d["buys"]
-        data[7].append((float(d["amount"])/t if t > 0 else 0))
+        b = (d["buys"] / d["buy_shares"]) if d["buy_shares"] > 0 else 0
+        data[5].append(b)
+        s = ((d["sells"]+d["fees"]) / d["sell_shares"]) if d["sell_shares"] > 0 else 0
+        data[6].append(s)
+        data[7].append(s - b)
     
     for bid, ask, hours, shares, balance, buys, sells, avg_buy, avg_sell, avg_price in \
             zip(bids[:12], asks[:12], *data):
@@ -138,7 +139,7 @@ def show_market_info(hl_obj, bids, asks, fee, symbol, myids=None):
                    "<-" if ask["id"] in ids else "  ")
         )
         o[-1] += " "*4
-        o[-1] += "{:>12d} | {:>7d} | {:>10.6f} | {:>10.8f} | {:>10.8f} | {:>10.8f} | {:>10.8f} | {:>10.8f}". \
+        o[-1] += "{:>12d} | {:>7d} | {:>10.6f} | {:>12.8f} | {:>12.8f} | {:>10.8f} | {:>10.8f} | {:>10.8f}". \
                 format(hours, shares, balance, buys, sells, avg_buy, avg_sell, avg_price)
     
     o.append("::")
