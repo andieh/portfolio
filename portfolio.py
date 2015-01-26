@@ -46,6 +46,9 @@ cp.add_argument("-s", "--show-all", action="store_true",
 cp.add_argument("-S", "--secs-history", 
         help="ignore all transactions older than seconds", default=None)
 
+cp.add_argument("-w", "--wallet-balance",
+        help="local wallet balance, not listed on installed plugins", default=Config.wallet_balance)
+
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
@@ -106,7 +109,8 @@ if args.secs_history is not None:
 
 havelockBalance = havelock.getBalance()
 bitcoinBalance = bitcoin.getBalance()
-sumBtc = bitcoinBalance + havelockBalance
+wallet = Config.wallet_balance
+sumBtc = bitcoinBalance + havelockBalance + wallet
 sumEur = bitcoin.exchange(sumBtc)
 invest = bitcoin.getInvest()
 
@@ -150,6 +154,7 @@ print "Summary:"
 print "-" * get_console_size()["width"]
 print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Havelock: ", havelockBalance, bitcoin.exchange(havelockBalance))
 print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Bitcoin: ", bitcoinBalance, bitcoin.exchange(bitcoinBalance))
+print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("local Wallet: ", wallet, bitcoin.exchange(wallet))
 print "-" * get_console_size()["width"]
 print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Total Balance: ", sumBtc,sumEur)
 print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total sum of investment: ", "", invest)
