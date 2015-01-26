@@ -32,6 +32,11 @@ DO_NOT_TRADE = False
 # clear console before writing new content
 CLEAR_CONSOLE = True
 
+# starttime
+STARTTIME = time.time()
+TRADEVOLUME = 1000
+
+
 if len(sys.argv) != 2:
     print "Usage: python2 tradebot.py <symbol>"
     sys.exit(1)
@@ -261,6 +266,11 @@ while True:
         print "\n".join(o)
         continue 
 
+    bal = get_balance(hl, sym, (time.time()-STARTTIME)/60./60.)
+    o += [":: from start:"]
+    o += [":: " + str(bal)]
+
+
     #### TRADE SECTION
     ############################################################################
     # check range to second (bid)
@@ -293,7 +303,11 @@ while True:
         clean_orders("bid", sym, myorders)
         o.append(":: - create order ({} @ {} = {})". \
                 format(amount, bid_price, amount*bid_price))
-        hl.createOrder(sym, "buy", bid_price, amount)
+
+        if amount + bal["amount"] > TRADEVOLUME:
+            o.append(":: {}+{}>{} -> buy boundary reached".format(amount, bal["amount"], TRADEVOLUME))
+        else:
+            hl.createOrder(sym, "buy", bid_price, amount)
     
     # check if top in ask:
     if top_ask["id"] not in myids and not DO_NOT_TRADE:
@@ -303,7 +317,13 @@ while True:
         clean_orders("ask", sym, myorders)
         o.append(":: - create order ({} @ {} = {})". \
                 format(amount, ask_price, amount*ask_price))
-        hl.createOrder(sym, "sell", ask_price, amount)
+        
+        if -amount + bal["amount"] < -TRADEVOLUME:
+            o.append(":: -{}+{}<-{} -> sell boundary reached".format(amount, bal["amount"], TRADEVOLUME))
+        else:
+            hl.createOrder(sym, "sell", ask_price, amount)
+
+
 
     if CLEAR_CONSOLE: 
         clear_console()
