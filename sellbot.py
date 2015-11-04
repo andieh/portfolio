@@ -30,6 +30,7 @@ hl.portfolio.addSymbol(sym)
 hl.loadTransactionFile(Config.hl_history)
 
 auto_sell = None
+cheaper = []
 
 while 1:
     orders = hl.fetchOrders()
@@ -140,6 +141,7 @@ while 1:
                     qty = min(amount, step)
                     sid = hl.createOrder(sym, "sell", np, qty)
                     auto_sell = ([sid["id"]], amount, price, step, qty)
+                    time.sleep(random.randint(1,5))
                     continue
 
                 time.sleep(10)
@@ -152,11 +154,21 @@ while 1:
                 else:
                     # cancel already placed ask
                     print "go cheaper!"
+                    cheaper = [x for x in cheaper if x > (time.time() - 120)]
+                    if len(cheaper) > 4:
+                        print "ok, let this guy go!"
+                        time.sleep(random.randint(5,10))
+                        continue
+
                     hl.cancelOrder(sid)
-                    np = top_sell["price"] - 1e-8
+                    r = random.randint(1,5)
+                    np = top_sell["price"] - (r*1e-8)
                     qty = min(amount, step)
+                    qty = random.randint(int(0.5*qty),qty)
                     sid = hl.createOrder(sym, "sell", np, qty)
                     auto_sell = ([sid["id"]], amount, price, step, qty)
+                    cheaper.append(time.time())
+                    time.sleep(random.randint(1,5))
                     continue
 
     while 1:

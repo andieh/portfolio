@@ -341,6 +341,7 @@ class Havelock:
         print fill.join("{:>{}s}".format(h, colwidth) \
                 for f, h in zip(fmts, header2))
 
+        return
         for s in self.portfolio.symbols:
             t = p.symbols[s]
             if not allSymbols and t.getShareQuantity() == 0:

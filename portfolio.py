@@ -52,7 +52,7 @@ cp.add_argument("-w", "--wallet-balance",
 args = cp.parse_args()
 
 bitcoin = Bitcoin(Config)
-havelock = Havelock(Config)
+#havelock = Havelock(Config)
 
 bitcoinInfo = Info()
 rates = Rates()
@@ -63,11 +63,11 @@ if os.path.exists(fn) and os.path.isfile(fn):
 else:
     print "[-] no bitcoin.de transaction history found..."
 
-fn = args.havelock_csv_file
-if os.path.exists(fn) and os.path.isfile(fn):
-    havelock.loadTransactionFile(fn)
-else:
-    print "[-] no havelock transaction history found..."
+#fn = args.havelock_csv_file
+#if os.path.exists(fn) and os.path.isfile(fn):
+#    havelock.loadTransactionFile(fn)
+#else:
+#    print "[-] no havelock transaction history found..."
  
 fn = args.rate_file
 if os.path.exists(fn) and os.path.isfile(fn):
@@ -78,49 +78,53 @@ else:
 # get bitcoin infos
 bitcoinInfo.update()
 
+"""
 # update transactions
 havelock.fetchTransactions()
 # get current prices
 havelock.fetchPortfolio()
 # get current Balance
 havelock.fetchBalance()
-
+"""
 # fetch btc.de data, if available
 r = bitcoin.fetchData()
 if r is None and args.btc2eur is not None:
     bitcoin.btc2eur = args.btc2eur
 
+"""
 # set rates if needed
 rates.addRate("BITCOIN", r)
 for (name, rate) in havelock.currentPrices.items():
     rates.addRate(name, rate)
+"""
 
 # store new data back
-havelock.store(Config.hl_history)
+#havelock.store(Config.hl_history)
 bitcoin.store(Config.btc_de_history)
 if rates is not None:
     rates.store(args.rate_file)
 
-# handle only transactions starting from now back for 'args.secs_history' seconds
-if args.secs_history is not None:
-    havelock.setStartDate(time.time()-(int(args.secs_history)))
-    havelock.setEndDate(time.time())
+## handle only transactions starting from now back for 'args.secs_history' seconds
+#if args.secs_history is not None:
+#    havelock.setStartDate(time.time()-(int(args.secs_history)))
+#    havelock.setEndDate(time.time())
 
 
-havelockBalance = havelock.getBalance()
+#havelockBalance = havelock.getBalance()
 bitcoinBalance = bitcoin.getBalance()
 wallet = Config.wallet_balance
-sumBtc = bitcoinBalance + havelockBalance + wallet
+sumBtc = bitcoinBalance + wallet # + havelockBalance
 sumEur = bitcoin.exchange(sumBtc)
 invest = bitcoin.getInvest()
 
 # maybe we want just a plain output
 if args.plain:
-    havelock.plain()
+    #havelock.plain()
     bitcoin.plain()
     print "[Sum]\ninvest:{:0.3f},sumBtc:{:0.3f},sumEur:{:0.3f},profit:{:0.3f}".format(invest, sumBtc, sumEur, sumEur+invest)
     sys.exit(0)
 
+"""
 print "Details:"
 console_width = get_console_size()["width"]
 print "-" * console_width
@@ -131,7 +135,6 @@ colwidth = (console_width / len(header)) - 3
 fill = " | "       
 print fill.join("{:>{}s}".format(h, colwidth) \
     for f, h in zip(fmts, header))
-
 ndc = bitcoinInfo.getNextDifficultyChangeAt()
 ndcStr = datetime.datetime.fromtimestamp(ndc).strftime('%Y-%m-%d')
 current = int(time.time())
@@ -143,16 +146,16 @@ print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
     for f, d in zip(fmts, data))
 
 print "-" * get_console_size()["width"]
+"""
 
 # some fancy output
-havelock.printPortfolio(btc2eur=bitcoin.btc2eur, allSymbols=args.show_all)
+#havelock.printPortfolio(btc2eur=bitcoin.btc2eur, allSymbols=args.show_all)
 bitcoin.printBitcoin()
 
-havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
-
+#havelock.printDetails(full=False, btc2eur=bitcoin.btc2eur)
 print "Summary:"
 print "-" * get_console_size()["width"]
-print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Havelock: ", havelockBalance, bitcoin.exchange(havelockBalance))
+#print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Havelock: ", havelockBalance, bitcoin.exchange(havelockBalance))
 print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("Bitcoin: ", bitcoinBalance, bitcoin.exchange(bitcoinBalance))
 print "{:<30s} | {:>26f} BTC | {:>25.2f} EUR |".format("local Wallet: ", wallet, bitcoin.exchange(wallet))
 print "-" * get_console_size()["width"]
@@ -161,6 +164,5 @@ print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total sum of investment: ", "
 print "-" * get_console_size()["width"]
 print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total profit: ", "", sumEur + invest)
 print "-" * get_console_size()["width"]
-
 
 

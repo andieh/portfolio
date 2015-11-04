@@ -40,6 +40,7 @@ class Info:
         except requests.exceptions.ConnectionError:
             print "failed to resolve blockchain.info"
             return None
+        return None # todo, update this!
         return r.text
 
     def update(self):

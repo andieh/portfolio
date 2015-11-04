@@ -262,6 +262,26 @@ class Bitcoin:
     def printBitcoin(self):
         console_width = get_console_size()["width"]
         
+        print "Your Portfolio:"
+        print "-" * console_width
+
+
+        fmts =    [".2f", "s", "s", ".3f", ".5f", ".5f", ".3f"]
+        header =  ["Trend (%)", "Buys (Price)", "", "Market (B)", 
+                   "Divs (B)", "Mean (B)", "Win (B)"]
+   
+        fmts2 =   [".2f", "s", "d", ".3f", ".5f", ".5f", ".2f"]
+        header2 = ["Overall (%)", "Sells (Price)", "Sum", "Book (B)", 
+                   "Fee (B)", "Cur (B)", "Win (E)"]
+    
+        colwidth = (console_width / len(header)) - 3
+        fill = " | "       
+
+        print fill.join("{:>{}s}".format(h, colwidth) \
+                for f, h in zip(fmts, header))
+        print fill.join("{:>{}s}".format(h, colwidth) \
+                for f, h in zip(fmts, header2))   
+        
         fmts =    [".2f", ".2f", "s", ".2f", "s", ".5f", "s"]
         header =  ["Trend (%)", "Buys", "", "Market (B)", 
                    "Divs (B)", "Mean (B)", "Win (B)"]
