@@ -180,7 +180,7 @@ class Bitcoin:
 
         return self.btc2eur
 
-    def loadTransactionFile(self, filename):
+    def loadTransactionFile(self, filename, start=-1):
         f = open(filename, "r")
         content = f.read()
         f.close()
@@ -189,9 +189,10 @@ class Bitcoin:
             if not line:
                 continue
             b = BitcoinTransaction()
+            current = int(time.time())
             if b.parse(line):
-                transactions.append(b)
-
+                if start < 0 or (current - b.getTimestamp())/(60*60*24)<start:
+                    transactions.append(b)
         self.transactions.addTransactions(transactions)
         self.transactions.sortTransactions()
 

@@ -124,30 +124,6 @@ if args.plain:
     print "[Sum]\ninvest:{:0.3f},sumBtc:{:0.3f},sumEur:{:0.3f},profit:{:0.3f}".format(invest, sumBtc, sumEur, sumEur+invest)
     sys.exit(0)
 
-"""
-print "Details:"
-console_width = get_console_size()["width"]
-print "-" * console_width
-fmts =   ["s", "d", ".2f", "g", "g"]
-header = ["Next diff change at", "Next diff change in (d)",  
-           "Diff change (%)", "current Diff", "estimated Diff"]
-colwidth = (console_width / len(header)) - 3
-fill = " | "       
-print fill.join("{:>{}s}".format(h, colwidth) \
-    for f, h in zip(fmts, header))
-ndc = bitcoinInfo.getNextDifficultyChangeAt()
-ndcStr = datetime.datetime.fromtimestamp(ndc).strftime('%Y-%m-%d')
-current = int(time.time())
-ndcDays = int(math.ceil((ndc - current) / float(60*60*24)))
-currentDiff = bitcoinInfo.getDifficulty()
-estimatedDiff = bitcoinInfo.getDifficultyEstimate()
-data = [ndcStr, ndcDays, bitcoinInfo.getNextDifficultyChange(), currentDiff, estimatedDiff]
-print fill.join("{0:>{1}{2}}".format(d, colwidth, f) \
-    for f, d in zip(fmts, data))
-
-print "-" * get_console_size()["width"]
-"""
-
 # some fancy output
 #havelock.printPortfolio(btc2eur=bitcoin.btc2eur, allSymbols=args.show_all)
 bitcoin.printBitcoin()
@@ -165,4 +141,38 @@ print "-" * get_console_size()["width"]
 print "{:<30s} | {:30s} | {:>25.2f} EUR |".format("Total profit: ", "", sumEur + invest)
 print "-" * get_console_size()["width"]
 
+analyse = [("3 Months", 3*31), \
+        ("2 Months", 62), \
+        ("1 Month", 31), \
+        ("7 Days", 7)]
 
+print "-" * get_console_size()["width"]
+print " Time (days) |    Buy         |  EUR / BTC     |    Sell        |  EUR / BTC     |   Buy Now?"
+print "-" * get_console_size()["width"]
+for (label, days) in analyse:
+    bTime = Bitcoin(Config)
+    fn = args.btcde_csv_file
+    bTime.loadTransactionFile(fn, days)
+    bTime.btc2eur = bitcoin.btc2eur
+    sumEur = bTime.exchange(bTime.getBalance())
+    invest = bTime.getInvest()
+
+    buys = bTime.transactions.getBuyQuantity()
+    buyPrice = (bTime.transactions.getBuyAmount())
+    if buys > 0:
+        buyPerBtc = buyPrice / buys
+    else:
+        buyPrice = 0.0
+    sellPrice = bTime.transactions.getSellAmount()
+    sells = bTime.transactions.getSellQuantity()
+    if sells > 0:
+        sellPerBtc = sellPrice / sells
+    else:
+        sellPerBtc = 0.0
+    sums = buys - sells
+    sumPrice = sellPrice - buyPrice
+
+    profit = bTime.exchange(buys) - buyPrice
+
+    print " {:<11d} | {:>10.2f} BTC | {:>10.2f} EUR | {:>10.2f} BTC | {:>10.2f} EUR |  {:>10.2f} EUR".format(days, buys, buyPerBtc, sells, sellPerBtc, profit)
+    print "-" * get_console_size()["width"]
